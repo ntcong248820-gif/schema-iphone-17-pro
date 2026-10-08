@@ -60,8 +60,11 @@ main{display:grid;grid-template-columns:268px minmax(0,1fr) 372px;gap:10px;paddi
 .row.dyn .c{color:#8a909c;font-style:italic}
 .row.has .c{box-shadow:inset 0 -1px 0 #e8d8a8}
 .row.nonote .c{opacity:.8}
-.row.sel .c{animation:blink 1s ease-in-out infinite}
-@keyframes blink{0%,100%{box-shadow:inset 0 0 0 2px var(--sel),0 0 0 0 rgba(26,115,232,0);filter:none}50%{box-shadow:inset 0 0 0 2px var(--sel),0 0 12px 3px rgba(26,115,232,.55);filter:brightness(.93)}}
+.row.sel .c{animation:pulse 1.1s ease-in-out infinite}
+.row.sel.empty-l .c.l,.row.sel.empty-r .c.r{animation:none}
+.row.sel.first .c:not(.l.x){box-shadow:inset 0 0 0 2px var(--sel)}
+.row.sel.first.empty-l .c.l,.row.sel.first.empty-r .c.r{box-shadow:none}
+@keyframes pulse{0%,100%{filter:none}50%{filter:brightness(.88) saturate(1.6)}}
 .chipwrap{margin-left:8px;display:inline-block}
 .chip{font:700 10px system-ui;padding:1px 6px;border-radius:5px;color:#fff;cursor:pointer;white-space:nowrap;vertical-align:1px}
 .chip.LOI{background:var(--LOI)}.chip.MOI{background:var(--MOI)}.chip.CHO{background:var(--CHO)}.chip.KB{background:var(--KB)}
@@ -232,7 +235,7 @@ function renderView(){
     let inner='';
     if(mode!=='new')inner+=`<div class="c l">${l}</div>`;
     if(mode!=='old')inner+=`<div class="c r">${rr}</div>`;
-    html+=`<div class="${cls.join(' ')}" data-i="${i}">${inner}</div>`;
+    html+=`<div class="${cls.join(' ')}" data-i="${i}" data-top="${r.top?1:0}">${inner}</div>`;
   }
   const v=$('#view');const st=v.scrollTop;v.innerHTML=html||'<div class="empty">Không có dòng nào để hiển thị với bộ lọc hiện tại.</div>';v.scrollTop=st;
   markSel();
@@ -248,7 +251,10 @@ $('#center').addEventListener('click',e=>{
 function markSel(){
   const v=$('#view');if(!v)return;
   v.querySelectorAll('.row.sel').forEach(x=>x.classList.remove('sel'));
-  if(ST.note)v.querySelectorAll('.row.n-'+CSS.escape(ST.note)).forEach(x=>x.classList.add('sel'));
+  v.querySelectorAll('.row.first').forEach(x=>x.classList.remove('first'));
+  if(ST.note){let prev=null;v.querySelectorAll('.row.n-'+CSS.escape(ST.note)).forEach(x=>{x.classList.add('sel');if(x.dataset.top==='1')x.classList.add('first');});
+    // dòng chọn cụ thể luôn có viền
+    if(ST.rowSel){const e=v.querySelector(`.row[data-i="${ST.rowSel.i}"]`);if(e){e.classList.add('sel','first');}}}
 }
 function changeList(){ // mọi vị trí trên trang: {b,i,n}
   const out=[];PG().blocks.forEach((b,bi)=>b.rows.forEach((r,i)=>{if(r.top&&r.n&&['chg','add','del','flag'].includes(r.s))out.push({b:bi,i,n:r.n});}));return out;

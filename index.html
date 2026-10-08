@@ -60,11 +60,10 @@ main{display:grid;grid-template-columns:268px minmax(0,1fr) 372px;gap:10px;paddi
 .row.dyn .c{color:#8a909c;font-style:italic}
 .row.has .c{box-shadow:inset 0 -1px 0 #e8d8a8}
 .row.nonote .c{opacity:.8}
-.row.sel .c{animation:pulse 1.1s ease-in-out infinite}
-.row.sel.empty-l .c.l,.row.sel.empty-r .c.r{animation:none}
+.row.sel .c{filter:brightness(.9) saturate(1.7)}
+.row.sel.empty-l .c.l,.row.sel.empty-r .c.r{filter:none}
 .row.sel.first .c:not(.l.x){box-shadow:inset 0 0 0 2px var(--sel)}
 .row.sel.first.empty-l .c.l,.row.sel.first.empty-r .c.r{box-shadow:none}
-@keyframes pulse{0%,100%{filter:none}50%{filter:brightness(.88) saturate(1.6)}}
 .chipwrap{margin-left:8px;display:inline-block}
 .chip{font:700 10px system-ui;padding:1px 6px;border-radius:5px;color:#fff;cursor:pointer;white-space:nowrap;vertical-align:1px}
 .chip.LOI{background:var(--LOI)}.chip.MOI{background:var(--MOI)}.chip.CHO{background:var(--CHO)}.chip.KB{background:var(--KB)}
@@ -302,7 +301,7 @@ function step(d){
 function drawDetail(){
   const el=$('#detail');
   if(ST.page==='__ov'||!ST.note){
-    el.innerHTML=`<div class="empty">Bấm vào dòng được tô màu, nhãn mã lỗi (ví dụ <span class="chip LOI">A1</span>) hoặc một mục ở cột trái để xem: lỗi hiện tại ra sao, vì sao phải sửa, sửa thành gì, nằm ở vùng nào trong mô tả của chị Myxeo.<br><br>Dòng đang chọn sẽ <b>nháy xanh</b> để dễ tìm. Dùng nút ◀ Trước / Sau ▶ để đi lần lượt qua từng chỗ cần sửa.</div>`;return;}
+    el.innerHTML=`<div class="empty">Bấm vào dòng được tô màu, nhãn mã lỗi (ví dụ <span class="chip LOI">A1</span>) hoặc một mục ở cột trái để xem: lỗi hiện tại ra sao, vì sao phải sửa, sửa thành gì, nằm ở vùng nào trong mô tả của chị Myxeo.<br><br>Dòng đang chọn sẽ <b>tô đậm</b> để dễ tìm. Dùng nút ◀ Trước / Sau ▶ để đi lần lượt qua từng chỗ cần sửa.</div>`;return;}
   const o=NOTES[ST.note];const P=PG();
   let oldv='',newv='';
   if(ST.rowSel){const r=P.blocks[ST.rowSel.b].rows[ST.rowSel.i];if(r){oldv=r.lv!=null?(r.lk!=null?'"'+r.lk+'": ':'')+r.lv:'(không có)';newv=r.rv!=null?(r.rk!=null?'"'+r.rk+'": ':'')+r.rv:'(không có)';}}
@@ -316,7 +315,7 @@ function drawDetail(){
   <div class="lbl">IT cần làm gì</div><div class="box fix">${esc(o.fix)}</div>
   <div class="lbl">Nằm ở vùng nào trong mô tả của chị Myxeo</div><div class="box src">${esc(o.src)}</div>
   <div class="lbl">Vị trí</div><div style="font-size:13px">${here} chỗ trên trang này.${other?'<br>Cũng gặp ở: '+other+'.':''}</div>
-  <div class="nav2"><button class="btn" id="dPrev">◀ Trước</button><button class="btn" id="dNext">Sau ▶</button><button class="btn" id="dBlink">Nháy lại</button></div>`;
+  <div class="nav2"><button class="btn" id="dPrev">◀ Trước</button><button class="btn" id="dNext">Sau ▶</button><button class="btn" id="dBlink">Tìm lại</button></div>`;
   $('#dPrev').onclick=()=>step(-1);$('#dNext').onclick=()=>step(1);
   $('#dBlink').onclick=()=>{markSel();scrollToSel();};
   el.querySelectorAll('[data-go]').forEach(a=>a.onclick=e=>{e.preventDefault();ST.page=a.dataset.go;ST.block=0;renderAll();selectNote(ST.note,true);});
@@ -346,7 +345,7 @@ function drawOverview(){
   const seen=new Set(ids);const rel=['A14'].filter(n=>!seen.has(n)&&NOTES[n]);
   if(rel.length){h+=`<h3>Đã biết nhưng không thấy trong trang mẫu đo hôm nay</h3><p class="sub">Các lỗi này có ở nhiều trang khác trên web nên IT vẫn cần kiểm khi áp mô tả mới, dù trang mẫu hôm nay không có.</p><table class="mx"><tr><th>Mã</th><th class="l">Nội dung và lý do</th></tr>`;
     rel.forEach(n=>{const o=NOTES[n];h+=`<tr><td><span class="code ${o.cat}">${esc(o.code)}</span></td><td class="l"><b>${esc(o.title)}</b><br>${esc(o.why)}</td></tr>`;});h+='</table>';}
-  h+='<h3>Cách đọc</h3><ul class="sub" style="font-size:13px;line-height:1.7"><li><b>Loại trang</b>: 6 đến 8 loại, theo từng cột bên trái.</li><li><b>Loại schema</b>: mỗi trang có nhiều khối (Organization, WebSite, BreadcrumbList, CollectionPage, Product...). Chọn tab theo khối.</li><li><b>Mã</b>: màu đỏ = lỗi giá trị đang chạy, xanh dương = đổi theo mô tả mới, cam = chờ chị Myxeo hoặc owner xác nhận.</li><li>Chọn một mã: các dòng liên quan <b>nháy xanh</b> ở cả hai cột, cột phải giải thích lỗi hiện tại và cách sửa.</li></ul></div>';
+  h+='<h3>Cách đọc</h3><ul class="sub" style="font-size:13px;line-height:1.7"><li><b>Loại trang</b>: 6 đến 8 loại, theo từng cột bên trái.</li><li><b>Loại schema</b>: mỗi trang có nhiều khối (Organization, WebSite, BreadcrumbList, CollectionPage, Product...). Chọn tab theo khối.</li><li><b>Mã</b>: màu đỏ = lỗi giá trị đang chạy, xanh dương = đổi theo mô tả mới, cam = chờ chị Myxeo hoặc owner xác nhận.</li><li>Chọn một mã: các dòng liên quan <b>tô đậm</b> ở cả hai cột, cột phải giải thích lỗi hiện tại và cách sửa.</li></ul></div>';
   $('#center').innerHTML=h;
   $('#center').onclick=e=>{
     const td=e.target.closest('td.cell[data-p]');if(td){ST.page=td.dataset.p;ST.block=+td.dataset.b;ST.note=null;ST.rowSel=null;renderAll();return;}

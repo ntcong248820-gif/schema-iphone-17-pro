@@ -53,6 +53,10 @@ main{display:grid;grid-template-columns:268px minmax(0,1fr) 372px;gap:10px;paddi
 .ph{color:var(--ph);font-style:italic;border-bottom:1px dashed var(--ph)}
 .dyn{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:#e8eaf6;color:#3949ab;font:600 10px/16px system-ui;vertical-align:1px;white-space:nowrap}
 .imgs figure{margin:8px 0}.imgs img{max-width:100%;border:1px solid var(--line);border-radius:6px;cursor:zoom-in}.imgs figcaption{font-size:12px;color:var(--mut);margin-top:3px}
+.lb{position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,.88);display:none;flex-direction:column;align-items:center;justify-content:center;padding:56px 16px 16px}
+.lb.on{display:flex}.lb img{max-width:100%;max-height:calc(100vh - 120px);background:#fff;border-radius:6px;box-shadow:0 8px 32px rgba(0,0,0,.5)}
+.lb .cap{color:#e2e8f0;font-size:13px;margin-top:10px;max-width:900px;text-align:center}
+.lb .x{position:absolute;top:12px;right:16px;background:#fff;color:#111;border:0;border-radius:20px;padding:8px 16px;font:600 14px system-ui;cursor:pointer}
 .lnks{margin:4px 0 0;padding-left:18px;font-size:13px}.lnks a{word-break:break-all}
 .ln{display:flex;align-items:flex-start}.lc{min-width:0;flex:1;overflow-wrap:anywhere}
 .arrow{flex:none;display:inline-block;width:14px;color:var(--mut);cursor:pointer;user-select:none}
@@ -406,7 +410,7 @@ function drawDetail(){
   ${ST.rowSel?`<div class="lbl">Khối đang chọn${pathTxt?': '+esc(pathTxt):''}</div><div class="sub" style="margin-bottom:4px">Hiện tại</div><pre class="v o">${esc(oldv)}</pre><div class="sub" style="margin:6px 0 4px">Mới</div><pre class="v n">${esc(newv)}</pre>`:''}
   <div class="lbl">Lỗi hiện tại ra sao</div><div class="box why">${esc(o.why)}</div>
   <div class="lbl">IT cần làm gì</div><div class="box fix">${esc(o.fix)}</div>
-  ${(o.imgs&&o.imgs.length)?'<div class="lbl">Vị trí lấy dữ liệu (ảnh)</div><div class="imgs">'+o.imgs.map(i=>`<figure><a href="${esc(i.f)}" target="_blank" rel="noopener"><img src="${esc(i.f)}" alt="${esc(i.cap)}"></a><figcaption>${esc(i.cap)}</figcaption></figure>`).join('')+'</div>':''}
+  ${(o.imgs&&o.imgs.length)?'<div class="lbl">Vị trí lấy dữ liệu (ảnh)</div><div class="imgs">'+o.imgs.map(i=>`<figure><img src="${esc(i.f)}" alt="${esc(i.cap)}" title="Bấm để phóng to"><figcaption>${esc(i.cap)}</figcaption></figure>`).join('')+'</div>':''}
   ${(o.links&&o.links.length)?'<div class="lbl">Link liên quan</div><ul class="lnks">'+o.links.map(l=>`<li><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t)}</a></li>`).join('')+'</ul>':''}
   <div class="lbl">Nằm ở vùng nào trong mô tả của chị Myxeo</div><div class="box src">${esc(o.src)}</div>
   <div class="lbl">Vị trí</div><div style="font-size:13px">${here} chỗ trên trang này.${other?'<br>Cũng gặp ở: '+other+'.':''}</div>
@@ -450,6 +454,19 @@ function drawOverview(){
 
 function renderAll(){drawHeader();drawNav();drawNotes();drawCenter();drawDetail();}
 renderAll();
+</script>
+<div class="lb" id="lb"><button class="x" id="lbX" type="button">✕ Đóng (Esc)</button><img id="lbImg" alt=""><div class="cap" id="lbCap"></div></div>
+<script>
+(function(){
+  const lb=document.getElementById('lb'),im=document.getElementById('lbImg'),cp=document.getElementById('lbCap');
+  const close=()=>{lb.classList.remove('on');im.removeAttribute('src');};
+  document.addEventListener('click',e=>{
+    const t=e.target;
+    if(t.matches&&t.matches('.imgs img')){im.src=t.src;cp.textContent=t.alt||'';lb.classList.add('on');return;}
+    if(lb.classList.contains('on')&&(t===lb||t.id==='lbX'))close();
+  });
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&lb.classList.contains('on'))close();});
+})();
 </script>
 </body>
 </html>

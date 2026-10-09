@@ -207,8 +207,12 @@ function drawNotes(){
   cf.innerHTML=CATS.map(c=>`<span class="chip ${c} ${ST.catOff[c]?'off':''}" data-c="${c}" title="${esc(CATL[c])}">${esc(CATL[c])}</span>`).join('');
   const P=PG();const ids=Object.keys(P.notes).filter(n=>!ST.catOff[NOTES[n].cat]);
   ids.sort((a,b)=>CATS.indexOf(NOTES[a].cat)-CATS.indexOf(NOTES[b].cat)||P.notes[b]-P.notes[a]);
-  if(!ids.length){el.innerHTML='<div class="empty">Không có chỗ cần sửa trong nhóm đang chọn.</div>';return;}
-  el.innerHTML=ids.map(n=>{const o=NOTES[n];return `<div class="it ${ST.note===n?'sel':''}" data-n="${n}"><span class="code ${o.cat}">${esc(o.code)}</span><span class="t">${esc(o.title)}</span><span class="n">${P.notes[n]} chỗ</span></div>`;}).join('');
+  // lỗi đã biết nhưng mẫu đo hôm nay không có dòng nào: vẫn liệt kê ở trang có khối đánh giá để IT thấy
+  const hasRating=(ST.page==='single'||ST.page==='variant')&&P.blocks.some(b=>b.rows.some(r=>/aggregateRating/.test(r.p||'')));
+  const known=(hasRating&&NOTES.A14&&!P.notes.A14&&!ST.catOff[NOTES.A14.cat])?['A14']:[];
+  if(!ids.length&&!known.length){el.innerHTML='<div class="empty">Không có chỗ cần sửa trong nhóm đang chọn.</div>';return;}
+  el.innerHTML=ids.map(n=>{const o=NOTES[n];return `<div class="it ${ST.note===n?'sel':''}" data-n="${n}"><span class="code ${o.cat}">${esc(o.code)}</span><span class="t">${esc(o.title)}</span><span class="n">${P.notes[n]} chỗ</span></div>`;}).join('')
+   +(known.length?'<div class="empty" style="padding:8px 12px 2px;font-weight:600">Đã biết, mẫu hôm nay chưa gặp</div>'+known.map(n=>{const o=NOTES[n];return `<div class="it ${ST.note===n?'sel':''}" data-n="${n}"><span class="code ${o.cat}">${esc(o.code)}</span><span class="t">${esc(o.title)}</span><span class="n">0 chỗ</span></div>`;}).join(''):'');
 }
 $('#catFilter').onclick=e=>{const c=e.target.closest('.chip');if(!c)return;ST.catOff[c.dataset.c]=!ST.catOff[c.dataset.c];drawNotes();};
 $('#noteList').onclick=e=>{const it=e.target.closest('.it');if(!it)return;selectNote(it.dataset.n,true);};
@@ -572,7 +576,7 @@ function drawDetail(){
   ${(o.imgs&&o.imgs.length)?'<div class="lbl">Vị trí lấy dữ liệu (ảnh)</div><div class="imgs">'+o.imgs.map(i=>`<figure><img src="${esc(i.f)}" alt="${esc(i.cap)}" title="Bấm để phóng to"><figcaption>${esc(i.cap)}</figcaption></figure>`).join('')+'</div>':''}
   ${(o.links&&o.links.length)?'<div class="lbl">Link liên quan</div><ul class="lnks">'+o.links.map(l=>`<li><a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t)}</a></li>`).join('')+'</ul>':''}
   <div class="lbl">Nằm ở vùng nào trong mô tả của chị Myxeo</div><div class="box src">${bl(o.src)}</div>
-  <div class="lbl">Vị trí</div><div style="font-size:13px">${here} chỗ trên trang này.${other?'<br>Cũng gặp ở: '+other+'.':''}</div>
+  <div class="lbl">Vị trí</div><div style="font-size:13px">${here?here+' chỗ trên trang này.':'Mẫu đo hôm nay chưa có dòng nào bị lỗi này, nhưng IT vẫn cần kiểm vì lỗi có ở trang khác trên web.'}${other?'<br>Cũng gặp ở: '+other+'.':''}</div>
   <div class="nav2"><button class="btn" id="dPrev">◀ Trước</button><button class="btn" id="dNext">Sau ▶</button><button class="btn" id="dBlink">Tìm lại</button></div>`;
   $('#dPrev').onclick=()=>step(-1);$('#dNext').onclick=()=>step(1);
   $('#dBlink').onclick=()=>{markSel();scrollToSel();};

@@ -53,8 +53,10 @@ main{display:grid;grid-template-columns:268px minmax(0,1fr) 372px;gap:10px;paddi
 .ph{color:var(--ph);font-style:italic;border-bottom:1px dashed var(--ph)}
 .dyn{display:inline-block;margin-left:6px;padding:0 6px;border-radius:8px;background:#e8eaf6;color:#3949ab;font:600 10px/16px system-ui;vertical-align:1px;white-space:nowrap}
 .imgs figure{margin:8px 0}.imgs img{max-width:100%;border:1px solid var(--line);border-radius:6px;cursor:zoom-in}.imgs figcaption{font-size:12px;color:var(--mut);margin-top:3px}
-.view.tv{overflow:hidden}.tv .tcols{height:100%;box-sizing:border-box;grid-template-rows:minmax(0,1fr)}.tcol{overflow:auto;min-height:0;padding-right:4px;overscroll-behavior:contain}
-.tcols{display:grid;gap:12px;padding:10px;font:13px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.tcols.two{grid-template-columns:1fr 1fr}.tcols.one{grid-template-columns:1fr}
+.tcol{min-width:0}
+.vr.sp>.vk,.vr.sp>.vv{background:repeating-linear-gradient(135deg,#f6f7f9,#f6f7f9 6px,#eceef2 6px,#eceef2 12px)}
+.vr.sp .gp{font:600 12px/1.45 system-ui;color:#8c1d18}.vr.sp .gp.them{color:#0d5a26}
+.tcols{display:grid;gap:12px;padding:10px;align-items:start;font:13px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}.tcols.two{grid-template-columns:1fr 1fr}.tcols.one{grid-template-columns:1fr}
 .vt{border:1px solid var(--line);border-radius:8px;background:#fff;overflow:hidden}
 .vt-h{display:flex;gap:8px;align-items:center;padding:7px 10px;background:#f1f3f9;border-bottom:1px solid var(--line)}
 .vt-h .tp{background:#1a73e8;color:#fff;border-radius:99px;padding:1px 10px;font-weight:600;font-size:12px}.vt-h .cn{margin-left:auto;font-size:12px;color:var(--mut)}
@@ -174,7 +176,7 @@ function drawHeader(){
 }
 $('#siteSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.site=b.dataset.s;ST.page='__ov';ST.block=0;ST.note=null;ST.rowSel=null;save();renderAll();};
 $('#modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.mode=b.dataset.m;save();renderAll();};
-$('#viewSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.view=b.dataset.v;save();renderAll();};
+$('#viewSeg').onclick=e=>{const b=e.target.closest('button');if(!b||b.dataset.v===ST.view)return;const idx=topRowIndex();ST.view=b.dataset.v;save();renderAll();scrollToRowIndex(idx);};
 $('#fullBtn').onclick=()=>{ST.full=!ST.full;renderAll();};
 $('#onlyChg').onclick=()=>{ST.only=!ST.only;renderAll();};
 $('#expAll').onclick=()=>{const k=ckey();collapsed[k]={};const b=curBlock();if(b)b.rows.forEach(r=>{if(r.g!=null&&!r.c)collapsed[k][r.g]=false;});renderView();};
@@ -318,7 +320,7 @@ function markChanged(n){
 function flatEntries(items,key){ // mảng con: lặp lại tên khóa như Schema Validator
   const out=[];
   items.forEach(it=>{
-    if(it.node&&it.node.arr){const k=it.key!=null?it.key:key;out.push(...flatEntries(it.node.items,k).map(e=>({...e,arrNode:it.node})));}
+    if(it.node&&it.node.arr){const k=it.key!=null?it.key:key;out.push(...flatEntries(it.node.items,k));}
     else out.push({...it,key:it.key!=null?it.key:key});
   });
   return out;
@@ -334,50 +336,88 @@ function tVal(side,it){
   return h;
 }
 function tCls(side,s){return side==='l'?((s==='del'||s==='chg')?'bad':s==='flag'?'flag':''):((s==='add'||s==='chg')?'good':s==='flag'?'flag':'');}
-function tTable(node,side,bi,head){
-  let ents=flatEntries(node.items,null);
-  if(ST.only)ents=ents.filter(e=>e.node?e.node.changed:CHG.includes(e.r.s));
-  let hide=new Set(),sum=new Map();
-  if(!ST.full&&!ST.only){
-    const by=new Map();ents.forEach((e,ix)=>{if(e.arrNode){if(!by.has(e.arrNode))by.set(e.arrNode,[]);by.get(e.arrNode).push(ix);}});
-    by.forEach((ixs,an)=>{
-      if(ixs.length<=3||expArr[aKey(bi,an.g)])return;
-      const keep=new Set([0,1]);ixs.forEach((ix,p)=>{const e=ents[ix];if(e.node?e.node.changed:CHG.includes(e.r.s))keep.add(p);});
-      let first=null,cnt=0;
-      ixs.forEach((ix,p)=>{if(keep.has(p))return;hide.add(ix);if(first==null)first=ix;cnt++;});
-      if(first!=null)sum.set(first,{g:an.g,cnt});
-    });
-  }
-  let rows='';
-  ents.forEach((e,ix)=>{
-    if(sum.has(ix)){const s=sum.get(ix);rows+=`<div class="vr summ" data-ag="${s.g}">⋯ còn ${s.cnt} mục tương tự. Bấm để xem đủ</div>`;}
-    if(hide.has(ix))return;
-    const r=e.r,cls=['vr',tCls(side,r.s)];if(r.n&&CHG.includes(r.s))cls.push('n-'+r.n);
+// danh sách mục sẽ vẽ của một bảng (đã lọc, đã rút gọn mục lặp theo đúng quy tắc của chế độ JSON)
+function tItems(node,sm){
+  const out=[];
+  flatEntries(node.items,null).forEach(e=>{
+    if(sm&&sm.hide.has(e.i)){const sr=sm.sum.get(e.i);if(sr)out.push({sum:sr,i:e.i});return;}
+    if(ST.only&&!(e.node?e.node.changed:CHG.includes(e.r.s)))return;
+    out.push({e,i:e.i});
+  });
+  return out;
+}
+function tGap(o,missingSide){ // gợi ý ở chỗ khuyết, giống khung ⛔ ➕ của chế độ JSON
+  const r=o.e.r;if(!(r.top&&r.n&&CHG.includes(r.s)))return '';
+  const nt=NOTES[r.n],key=o.e.key!=null?o.e.key:'mục này';
+  const del=missingSide==='r'; // bên phải khuyết = cột Mới không có = BỎ
+  let txt=(del?nt.gd:nt.ga)||((del?'BỎ ':'THÊM ')+key+' ('+nt.title+')');txt=txt.split('{k}').join(key);
+  return `<div class="gp ${del?'':'them'}">${del?'⛔':'➕'} ${esc(txt)}</div>`;
+}
+function tTable(node,pnode,side,bi,head,sm){
+  const mine=tItems(node,sm),theirs=pnode?tItems(pnode,sm):[];
+  const pmap=new Map();theirs.forEach(o=>{if(o.e&&o.e.node)pmap.set(o.i,o.e.node);});
+  let rows='',a=0,b=0;
+  const emitSpacer=o=>{rows+=`<div class="vr sp${o.e&&o.e.r.n?' n-'+o.e.r.n:''}" data-pi="${o.i}"${o.e?` data-i="${o.e.i}"`:''}><div class="vk"></div><div class="vv">${o.e?tGap(o,side):''}</div></div>`;};
+  const emit=o=>{
+    if(o.sum){rows+=`<div class="vr summ" data-pi="${o.i}" data-ag="${o.sum.g}">⋯ còn ${o.sum.cnt} mục tương tự. Bấm để xem đủ</div>`;return;}
+    const e=o.e,r=e.r,cls=['vr',tCls(side,r.s)];if(r.n&&CHG.includes(r.s))cls.push('n-'+r.n);
     const chip=(r.top&&r.n&&CHG.includes(r.s))?`<span class="chip ${NOTES[r.n].cat}" data-n="${r.n}">${esc(NOTES[r.n].code)}</span>`:'';
     const key=e.key!=null?esc(e.key):'·';
-    rows+=`<div class="${cls.join(' ')}" data-i="${e.i}"><div class="vk">${key}</div><div class="vv">${e.node?tTable(e.node,side,bi,false):tVal(side,e)}${chip}</div></div>`;
-  });
+    rows+=`<div class="${cls.join(' ')}" data-i="${e.i}" data-pi="${o.i}"><div class="vk">${key}</div><div class="vv">${e.node?tTable(e.node,pmap.get(o.i)||null,side,bi,false,sm):tVal(side,e)}${chip}</div></div>`;
+  };
+  while(a<mine.length||b<theirs.length){
+    if(b>=theirs.length||(a<mine.length&&mine[a].i<theirs[b].i)){emit(mine[a++]);}
+    else if(a>=mine.length||theirs[b].i<mine[a].i){emitSpacer(theirs[b++]);}
+    else{emit(mine[a++]);b++;}
+  }
   let hd='';
   if(head){const ty=node.items.find(it=>it.key==='@type'&&it.leaf);let tn=ty?String(ty.leaf.v).replace(/^"|"$/g,''):'';
     const c=tCnt(node);const rr=node.r;const hc=(rr&&rr.top&&rr.n&&CHG.includes(rr.s))?`<span class="chip ${NOTES[rr.n].cat}" data-n="${rr.n}">${esc(NOTES[rr.n].code)}</span>`:'';
     hd=`<div class="vt-h"><span class="tp">${esc(tn||'Khối')}</span>${hc}<span class="cn">${c?c+' chỗ cần sửa':'không có chỗ cần sửa'}</span></div>`;}
   return `<div class="vt">${hd}${rows}</div>`;
 }
+// làm hai bảng thẳng hàng: dòng cùng số thứ tự ở hai bên cao bằng nhau (từ trong ra ngoài)
+function equalizeTables(){
+  const v=$('#view');if(!v||ST.view!=='table')return;
+  const cols=v.querySelectorAll('.tcol');if(cols.length!==2)return;
+  const els=v.querySelectorAll('.vr[data-pi]');els.forEach(el=>el.style.minHeight='');
+  const L=new Map(),R=new Map(),depth=el=>{let d=0,p=el.parentElement;while(p&&p!==v){if(p.classList&&p.classList.contains('vr'))d++;p=p.parentElement;}return d;};
+  cols[0].querySelectorAll('.vr[data-pi]').forEach(el=>{if(!L.has(el.dataset.pi))L.set(el.dataset.pi,el);});
+  cols[1].querySelectorAll('.vr[data-pi]').forEach(el=>{if(!R.has(el.dataset.pi))R.set(el.dataset.pi,el);});
+  const pairs=[];L.forEach((a,k)=>{const b=R.get(k);if(b)pairs.push([a,b,depth(a)]);});
+  pairs.sort((p,q)=>q[2]-p[2]);
+  pairs.forEach(([a,b])=>{const h=Math.max(a.offsetHeight,b.offsetHeight);a.style.minHeight=h+'px';b.style.minHeight=h+'px';});
+}
+window.addEventListener('resize',()=>{clearTimeout(window.__eqT);window.__eqT=setTimeout(equalizeTables,120);});
 function renderTable(){
   const b=curBlock();const mode=ST.mode;
   const goneBo=`<div class="gone">BỎ KHỐI ${esc(b.type)}<small>Theo mô tả mới, trang này không còn khối này.</small></div>`;
   const goneNew=`<div class="gone them">CHƯA CÓ KHỐI ${esc(b.type)}<small>Hiện web chưa có, theo mô tả mới phải thêm.</small></div>`;
-  const sides=mode==='both'?['l','r']:mode==='old'?['l']:['r'];
-  const cols=sides.map(sd=>{
-    const t=buildTree(b.rows,sd);
-    if(!t)return `<div class="tcol">${sd==='r'?goneBo:goneNew}</div>`;
-    markChanged(t);
-    return `<div class="tcol" data-sd="${sd}">${tTable(t,sd,ST.block,true)}</div>`;
-  });
-  const v=$('#view');const old={};v.querySelectorAll('.tcol[data-sd]').forEach(c=>old[c.dataset.sd]=c.scrollTop);
-  v.classList.add('tv');v.innerHTML=`<div class="tcols ${sides.length===2?'two':'one'}">${cols.join('')}</div>`;
-  v.querySelectorAll('.tcol[data-sd]').forEach(c=>{if(old[c.dataset.sd]!=null)c.scrollTop=old[c.dataset.sd];});
+  const tl=buildTree(b.rows,'l'),tr=buildTree(b.rows,'r');
+  if(tl)markChanged(tl);if(tr)markChanged(tr);
+  const sm=(ST.full||ST.only)?null:summarize(b,ST.block);
+  const both=mode==='both';
+  const cols=[];
+  if(mode!=='new')cols.push(`<div class="tcol">${tl?tTable(tl,both?tr:null,'l',ST.block,true,sm):goneNew}</div>`);
+  if(mode!=='old')cols.push(`<div class="tcol">${tr?tTable(tr,both?tl:null,'r',ST.block,true,sm):goneBo}</div>`);
+  const v=$('#view');const st=v.scrollTop;
+  v.classList.add('tv');v.innerHTML=`<div class="tcols ${cols.length===2?'two':'one'}">${cols.join('')}</div>`;
+  equalizeTables();v.scrollTop=st;
   markSel();
+}
+/* giữ nguyên vị trí đang xem khi đổi giữa Mã JSON và Dạng bảng */
+function topRowIndex(){
+  const v=$('#view');if(!v)return null;const vt=v.getBoundingClientRect().top;
+  const els=v.querySelectorAll(ST.view==='table'?'.vr[data-i]':'.row[data-i]');
+  for(const el of els){if(el.getBoundingClientRect().top>=vt-2)return +el.dataset.i;}
+  return null;
+}
+function scrollToRowIndex(idx){
+  if(idx==null)return;const v=$('#view');if(!v)return;
+  let best=null,bi=Infinity;
+  v.querySelectorAll('.row[data-i],.vr[data-i]').forEach(el=>{const i=+el.dataset.i;if(i>=idx&&i<bi){bi=i;best=el;}});
+  if(!best)return;
+  v.scrollTop=best.getBoundingClientRect().top-v.getBoundingClientRect().top+v.scrollTop;
 }
 function renderView(){
   if(ST.view==='table'&&curBlock()){renderTable();return;}
@@ -487,7 +527,7 @@ function selectNote(n,jump,rowIdx){
 }
 function scrollToSel(){
   if(!ST.rowSel)return;const v=$('#view');if(!v)return;
-  if(ST.view==='table'){v.querySelectorAll('.tcol').forEach(c=>{const el=c.querySelector('.vr.first')||c.querySelector('.vr.sel');if(el){const top=el.getBoundingClientRect().top-c.getBoundingClientRect().top+c.scrollTop-c.clientHeight/3;c.scrollTo({top:Math.max(0,top),behavior:'smooth'});}});return;}
+  if(ST.view==='table'){const el=v.querySelector('.vr.first')||v.querySelector('.vr.sel');if(el){const top=el.getBoundingClientRect().top-v.getBoundingClientRect().top+v.scrollTop-v.clientHeight/3;v.scrollTop=Math.max(0,top);}return;}
   const el=v.querySelector(`.row[data-i="${ST.rowSel.i}"],.vr[data-i="${ST.rowSel.i}"]`)||v.querySelector('.row.sel,.vr.sel');
   if(el){const top=el.getBoundingClientRect().top-v.getBoundingClientRect().top+v.scrollTop-v.clientHeight/3;v.scrollTo({top:Math.max(0,top),behavior:'smooth'});}
 }

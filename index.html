@@ -279,6 +279,12 @@ function arrGroups(b){
   return b._ag=out;
 }
 const aKey=(bi,g)=>ST.site+'|'+ST.page+'|'+bi+'|'+g;
+// nhóm lặp đã bấm mở (chỉ khi đang ở chế độ rút gọn): dùng để vẽ nút "Thu gọn lại"
+function openedGroups(b,bi){
+  if(ST.full||ST.only)return [];
+  return arrGroups(b).filter(a=>expArr[aKey(bi,a.g)]);
+}
+const collapseTxt=a=>`⌃ Thu gọn lại, chỉ hiện vài mục đầu (đang hiện đủ ${a.items.length} mục)`;
 function summarize(b,bi){
   const hide=new Set(),sum=new Map();
   for(const a of arrGroups(b)){
@@ -347,6 +353,16 @@ function tItems(node,sm){
     if(ST.only&&!(e.node?e.node.changed:CHG.includes(e.r.s)))return;
     out.push({e,i:e.i});
   });
+  // nút "Thu gọn lại" cho danh sách đã bấm mở: một ở đầu, một ở cuối (mảng được trải phẳng vào bảng cha)
+  if(!ST.full&&!ST.only){
+    const b=curBlock();
+    const nl=b.rows[node.i].l;
+    openedGroups(b,ST.block).forEach(a=>{
+      if(!(a.o>node.i&&b.rows[a.o].l===nl+1&&out.some(o=>o.i>a.o&&o.i<a.cl)))return; // chỉ mảng nằm trực tiếp trong bảng này
+      out.push({cg:a,i:a.o+0.25});out.push({cg:a,i:a.cl-0.25});
+    });
+    out.sort((x,y)=>x.i-y.i);
+  }
   return out;
 }
 const jmpHtml=j=>j?`<a class="jmp" href="#" data-jp="${j.page}" data-jb="${esc(j.block)}" data-jx="${esc(j.path||'')}">→ ${esc(j.text)}</a>`:'';
@@ -363,6 +379,7 @@ function tTable(node,pnode,side,bi,head,sm){
   let rows='',a=0,b=0;
   const emitSpacer=o=>{rows+=`<div class="vr sp${o.e&&o.e.r.n?' n-'+o.e.r.n:''}" data-pi="${o.i}"${o.e?` data-i="${o.e.i}"`:''}><div class="vk"></div><div class="vv">${o.e?tGap(o,side):''}</div></div>`;};
   const emit=o=>{
+    if(o.cg){rows+=`<div class="vr summ" data-pi="${o.i}" data-cg="${o.cg.g}">${collapseTxt(o.cg)}</div>`;return;}
     if(o.sum){rows+=`<div class="vr summ" data-pi="${o.i}" data-ag="${o.sum.g}">⋯ còn ${o.sum.cnt} mục tương tự. Bấm để xem đủ</div>`;return;}
     const e=o.e,r=e.r,cls=['vr',tCls(side,r.s)];if(r.n&&CHG.includes(r.s))cls.push('n-'+r.n);
     const chip=(r.top&&r.n&&CHG.includes(r.s))?`<span class="chip ${NOTES[r.n].cat}" data-n="${r.n}">${esc(NOTES[r.n].code)}</span>`:'';
@@ -445,6 +462,9 @@ function renderView(){
     const r=rows[i];
     const hasL=r.lv!=null,hasR=r.rv!=null;
     if(mode==='old'&&!hasL)continue;if(mode==='new'&&!hasR)continue;
+    const cgA=openedGroups(b,ST.block).find(a=>a.cl===i);
+    if(cgA){const cell=`<div style="padding-left:${(rows[cgA.o].l+1)*16+14}px">${collapseTxt(cgA)}</div>`;
+      html+=`<div class="row summ" data-cg="${cgA.g}">${mode!=='new'?`<div class="c l">${cell}</div>`:''}${mode!=='old'?`<div class="c r">${cell}</div>`:''}</div>`;}
     if(ST.only&&r.s==='same'&&!r.c&&r.g==null)continue;
     if(ST.only&&r.s==='same'&&r.g!=null)continue;
     if(ST.only&&r.s==='dyn')continue;
@@ -478,12 +498,16 @@ function renderView(){
     if(mode!=='new')inner+=`<div class="c l">${l}</div>`;
     if(mode!=='old')inner+=`<div class="c r">${rr}</div>`;
     html+=`<div class="${cls.join(' ')}" data-i="${i}" data-top="${r.top?1:0}">${inner}</div>`;
+    const cgO=openedGroups(b,ST.block).find(a=>a.o===i);
+    if(cgO){const cell=`<div style="padding-left:${(r.l+1)*16+14}px">${collapseTxt(cgO)}</div>`;
+      html+=`<div class="row summ" data-cg="${cgO.g}">${mode!=='new'?`<div class="c l">${cell}</div>`:''}${mode!=='old'?`<div class="c r">${cell}</div>`:''}</div>`;}
   }
   const v=$('#view');const st=v.scrollTop;v.innerHTML=html||'<div class="empty">Không có dòng nào để hiển thị với bộ lọc hiện tại.</div>';v.scrollTop=st;
   markSel();
 }
 $('#center').addEventListener('click',e=>{
-  const sr0=e.target.closest('.row.summ,.vr.summ');if(sr0){expArr[ckey()+'|'+sr0.dataset.ag]=true;renderView();return;}
+  const cg0=e.target.closest('[data-cg]');if(cg0){delete expArr[ckey()+'|'+cg0.dataset.cg];renderView();return;}
+  const sr0=e.target.closest('.row.summ[data-ag],.vr.summ[data-ag]');if(sr0){expArr[ckey()+'|'+sr0.dataset.ag]=true;renderView();return;}
   const ar=e.target.closest('.arrow');
   if(ar&&ar.dataset.g!==undefined){const g=+ar.dataset.g;const k=ckey();const m=collapsed[k]=(collapsed[k]||{});const b=curBlock();const r=b.rows.find(x=>x.g===g&&!x.c);m[g]=!isColl(r,m);renderView();return;}
   const ch=e.target.closest('.chip[data-n]');if(ch){const rr0=ch.closest('.row,.vr');selectNote(ch.dataset.n,false,rr0&&+rr0.dataset.i);return;}

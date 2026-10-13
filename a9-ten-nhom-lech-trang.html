@@ -1,0 +1,367 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A9 minh họa: ProductGroup.name lệch trang đang xem và chứa từ khóa rác</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:980px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad)}.bad-t{color:var(--bad);font-weight:600}.mono,code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.ok-cell{background:#eef7ee;color:var(--ok);font-weight:600}
+.u{margin:2px 0 6px;font-size:12px}a{color:var(--sel)}.fix{background:#eef7ee;border:1px solid #cfe6cf;border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:12.5px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff}
+.bad-b{background:var(--bad);margin-right:4px}.ok-b{background:var(--ok)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;margin:6px 0}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><div class="w">
+<p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p>
+<h1>A9: ProductGroup.name lệch phiên bản trang và chứa từ khóa rác</h1>
+<p class="mut">Minh họa trên URL thật, đo ngày 12/10/2026. Yêu cầu A9: ProductGroup.name là tên chung của dòng sản phẩm, không chứa dung lượng/màu cụ thể, sạch từ khóa quảng cáo; Breadcrumb cuối khớp trang đang xem.</p>
+
+<div class="card"><span class="badge bad-b">Chưa đạt</span>
+<ul>
+  <li><b>20/20 trang ProductGroup (100%):</b> Còn dính từ khóa quảng cáo <code> chính hãng, giá tốt</code> ở cuối tên.</li>
+  <li><b>15/20 trang (75%):</b> <code>ProductGroup.name</code> đang lấy cố định tên của một biến thể con bất kỳ (vd: xem trang <b>1TB</b> nhưng name lại ghi <b>256GB Xanh Đậm</b>).</li>
+  <li><b>6/12 trang:</b> Mục cuối của <code>BreadcrumbList</code> hiển thị sai lệch dung lượng so với URL người dùng đang truy cập.</li>
+</ul>
+</div>
+
+<h2>1. Các ví dụ thực tế bị lệch nghiêm trọng giữa các trang trong cùng model</h2>
+<p class="mut">Ô màu đỏ là giá trị thực tế đang bị sai trên Staging; cột xanh là giá trị chuẩn cần sửa thành.</p>
+<section class="card">
+<h3>iPhone 17 Pro Max 1TB</h3>
+<p class="u"><a href="https://www.thegioididong.com/dtdd/iphone-17-pro-max-1tb" target="_blank" rel="noopener">/dtdd/iphone-17-pro-max-1tb ↗</a> · Phiên bản thực tế của trang: <b>1TB</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">Điện thoại iPhone 17 Pro Max 256GB Xanh Đậm chính hãng, giá tốt</td>
+    <td class="ok-cell">Điện thoại iPhone 17 Pro Max</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">Điện thoại iPhone 17 Pro Max 256GB</td>
+    <td class="ok-cell">Điện thoại iPhone 17 Pro Max 1TB</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là bản 1TB, nhưng schema và breadcrumb lấy cố định bản 256GB Xanh Đậm.</p>
+</section>
+<section class="card">
+<h3>iPhone 17 Pro 512GB</h3>
+<p class="u"><a href="https://www.thegioididong.com/dtdd/iphone-17-pro-512gb" target="_blank" rel="noopener">/dtdd/iphone-17-pro-512gb ↗</a> · Phiên bản thực tế của trang: <b>512GB</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">Điện thoại iPhone 17 Pro 256GB Xanh Đậm chính hãng, giá tốt</td>
+    <td class="ok-cell">Điện thoại iPhone 17 Pro</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">Điện thoại iPhone 17 Pro 256GB</td>
+    <td class="ok-cell">Điện thoại iPhone 17 Pro 512GB</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là bản 512GB, nhưng schema và breadcrumb bị gán nhầm sang 256GB Xanh Đậm.</p>
+</section>
+<section class="card">
+<h3>iPhone 18 Pro 2TB</h3>
+<p class="u"><a href="https://www.thegioididong.com/dtdd/iphone-18-pro-2tb" target="_blank" rel="noopener">/dtdd/iphone-18-pro-2tb ↗</a> · Phiên bản thực tế của trang: <b>2TB</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">iPhone 18 Pro 256GB chính hãng, giá tốt</td>
+    <td class="ok-cell">iPhone 18 Pro</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">iPhone 18 Pro 256GB</td>
+    <td class="ok-cell">iPhone 18 Pro 2TB</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là bản 2TB, nhưng schema và breadcrumb lấy nhầm bản 256GB.</p>
+</section>
+<section class="card">
+<h3>Samsung Galaxy A37 bản 8GB/128GB</h3>
+<p class="u"><a href="https://www.thegioididong.com/dtdd/samsung-galaxy-a37-8gb-128gb" target="_blank" rel="noopener">/dtdd/samsung-galaxy-a37-8gb-128gb ↗</a> · Phiên bản thực tế của trang: <b>8GB/128GB</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">Điện thoại Samsung Galaxy A37 5G 6GB/128GB Đen chính hãng, giá tốt</td>
+    <td class="ok-cell">Điện thoại Samsung Galaxy A37 5G</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">Điện thoại Samsung Galaxy A37 5G 6GB/128GB</td>
+    <td class="ok-cell">Điện thoại Samsung Galaxy A37 5G 8GB/128GB</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là bản RAM 8GB, nhưng schema và breadcrumb lấy nhầm bản 6GB Đen.</p>
+</section>
+<section class="card">
+<h3>MacBook Air 15 inch M5 bản sạc 70W</h3>
+<p class="u"><a href="https://www.thegioididong.com/laptop/macbook-air-15-inch-m5-16gb-512gb-70w" target="_blank" rel="noopener">/laptop/macbook-air-15-inch-m5-16gb-512gb-70w ↗</a> · Phiên bản thực tế của trang: <b>70W</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">MacBook Air 15 inch M5 16GB/512GB 35W Xanh đen chính hãng, giá tốt</td>
+    <td class="ok-cell">MacBook Air 15 inch M5 16GB/512GB</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">MacBook Air 15 inch M5 16GB/512GB 35W</td>
+    <td class="ok-cell">MacBook Air 15 inch M5 16GB/512GB 70W</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là bản sạc 70W, nhưng schema và breadcrumb lấy nhầm bản 35W Xanh đen.</p>
+</section>
+<section class="card">
+<h3>Túi đeo Jansport Fifth Avenue màu Đen</h3>
+<p class="u"><a href="https://www.thegioididong.com/tui-dung-phu-kien/tui-deo-jansport-fifth-avenue-2-5l-den" target="_blank" rel="noopener">/tui-dung-phu-kien/tui-deo-jansport-fifth-avenue-2-5l-den ↗</a> · Phiên bản thực tế của trang: <b>Đen</b></p>
+<table>
+  <tr>
+    <th style="width:25%">Vị trí</th>
+    <th style="width:40%">Schema hiện tại (Đang sai)</th>
+    <th style="width:35%">Cần sửa thành (Đúng chuẩn)</th>
+  </tr>
+  <tr>
+    <td><b>ProductGroup.name</b><br><span class="mut">(Tên nhóm sản phẩm)</span></td>
+    <td class="bad">Túi đeo Jansport Fifth Avenue 2.5L Tím chính hãng, giá tốt</td>
+    <td class="ok-cell">Túi đeo Jansport Fifth Avenue 2.5L</td>
+  </tr>
+  <tr>
+    <td><b>BreadcrumbList mục cuối</b><br><span class="mut">(Tên mục sản phẩm đang xem)</span></td>
+    <td class="bad">Túi đeo Jansport Fifth Avenue 2.5L Tím</td>
+    <td class="ok-cell">Túi đeo Jansport Fifth Avenue 2.5L Đen</td>
+  </tr>
+</table>
+<p class="fix">Trang đang xem là màu Đen, nhưng schema và breadcrumb lại gán nhầm màu Tím.</p>
+</section>
+
+<h2>2. So sánh cấu trúc Schema JSON (Ví dụ trên trang iPhone 17 Pro Max 1TB)</h2>
+<h3>A. Khối ProductGroup</h3>
+<div class="cols"><div><b>Hiện tại (Lấy nhầm 256GB Xanh Đậm, dính từ rác)</b><pre>{
+  &quot;@type&quot;: &quot;ProductGroup&quot;,
+  &quot;name&quot;: &quot;Điện thoại iPhone 17 Pro Max 256GB Xanh Đậm chính hãng, giá tốt&quot;,
+  &quot;hasVariant&quot;: [
+    &quot;// các biến thể của trang...&quot;
+  ]
+}</pre></div><div><b>Cần ra (Tên chung của dòng, sạch từ rác)</b><pre>{
+  &quot;@type&quot;: &quot;ProductGroup&quot;,
+  &quot;name&quot;: &quot;Điện thoại iPhone 17 Pro Max&quot;,
+  &quot;hasVariant&quot;: [
+    &quot;// các biến thể (tên đầy đủ theo dòng + dung lượng + màu theo rule A5)&quot;
+  ]
+}</pre></div></div>
+
+<h3>B. Khối BreadcrumbList</h3>
+<div class="cols"><div><b>Hiện tại (Mục cuối ghi nhầm 256GB)</b><pre>{
+  &quot;@type&quot;: &quot;BreadcrumbList&quot;,
+  &quot;itemListElement&quot;: [
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 1,
+      &quot;name&quot;: &quot;Trang chủ&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 2,
+      &quot;name&quot;: &quot;Điện thoại&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 3,
+      &quot;name&quot;: &quot;Điện thoại iPhone 17 Pro Max 256GB&quot;
+    }
+  ]
+}</pre></div><div><b>Cần ra (Mục cuối khớp đúng trang 1TB đang xem)</b><pre>{
+  &quot;@type&quot;: &quot;BreadcrumbList&quot;,
+  &quot;itemListElement&quot;: [
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 1,
+      &quot;name&quot;: &quot;Trang chủ&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 2,
+      &quot;name&quot;: &quot;Điện thoại&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;ListItem&quot;,
+      &quot;position&quot;: 3,
+      &quot;name&quot;: &quot;Điện thoại iPhone 17 Pro Max 1TB&quot;
+    }
+  ]
+}</pre></div></div>
+
+<h2>3. Bảng tổng hợp trạng thái ProductGroup trên các trang đo Staging</h2>
+<p class="mut">Toàn bộ 20 trang đều đang bị ít nhất 1 lỗi (từ rác hoặc lấy nhầm biến thể).</p>
+<table>
+  <tr>
+    <th style="width:25%">URL trang</th>
+    <th style="width:40%">ProductGroup.name trên Staging</th>
+    <th style="width:23%">Breadcrumb mục cuối</th>
+    <th style="width:12%">Vấn đề</th>
+  </tr>
+  <tr>
+  <td><a href="https://www.thegioididong.com/laptop/macbook-air-13-inch-m5-16gb-512gb" target="_blank" rel="noopener">/laptop/macbook-air-13-inch-m5-16gb-512gb ↗</a></td>
+  <td class="mono bad">MacBook Air 13 inch M5 16GB/512GB/8GPU 30W Vàng chính hãng, giá tốt</td>
+  <td class="mono">MacBook Air 13 inch M5 16GB/512GB/8GPU 30W</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-chup-tai-sony-wh-1000xx" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-chup-tai-sony-wh-1000xx ↗</a></td>
+  <td class="mono bad">Tai nghe Bluetooth Chụp Tai Sony WH-1000XX chính hãng, giá tốt</td>
+  <td class="mono">Tai nghe Bluetooth Chụp Tai Sony WH-1000XX</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/laptop/macbook-air-15-inch-m5-16gb-512gb-70w" target="_blank" rel="noopener">/laptop/macbook-air-15-inch-m5-16gb-512gb-70w ↗</a></td>
+  <td class="mono bad">MacBook Air 15 inch M5 16GB/512GB 35W Xanh đen chính hãng, giá tốt</td>
+  <td class="mono">MacBook Air 15 inch M5 16GB/512GB 35W</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/tui-dung-phu-kien/tui-deo-jansport-fifth-avenue-2-5l-den" target="_blank" rel="noopener">/tui-dung-phu-kien/tui-deo-jansport-fifth-avenue-2-5l-den ↗</a></td>
+  <td class="mono bad">Túi đeo Jansport Fifth Avenue 2.5L Tím chính hãng, giá tốt</td>
+  <td class="mono">Túi đeo Jansport Fifth Avenue 2.5L Tím</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-17" target="_blank" rel="noopener">/dtdd/iphone-17 ↗</a></td>
+  <td class="mono bad">Điện thoại iPhone 17 256GB Tím Oải Hương chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại iPhone 17 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-true-wireless-xiaomi-buds-6" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-true-wireless-xiaomi-buds-6 ↗</a></td>
+  <td class="mono bad">Tai nghe Bluetooth True Wireless Xiaomi Buds 6 chính hãng, giá tốt</td>
+  <td class="mono">Tai nghe Bluetooth True Wireless Xiaomi Buds 6</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/day-dong-ho/day-da-redmi-watch-5-band-8-pro-9-pro" target="_blank" rel="noopener">/day-dong-ho/day-da-redmi-watch-5-band-8-pro-9-pro ↗</a></td>
+  <td class="mono bad">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro chính hãng, giá tốt</td>
+  <td class="mono">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/samsung-galaxy-a57-8gb-128gb" target="_blank" rel="noopener">/dtdd/samsung-galaxy-a57-8gb-128gb ↗</a></td>
+  <td class="mono bad">Điện thoại Samsung Galaxy A57 5G 8GB/128GB chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại Samsung Galaxy A57 5G 8GB/128GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/o-cung-di-dong/1tb-seagate-one-touch-stky1000" target="_blank" rel="noopener">/o-cung-di-dong/1tb-seagate-one-touch-stky1000 ↗</a></td>
+  <td class="mono bad">Ổ cứng di động HDD 1TB Seagate One Touch STKY1000401/ STKY1000400 Đen chính hãng, giá tốt</td>
+  <td class="mono">Ổ cứng di động HDD 1TB Seagate One Touch STKY1000401/ STKY1000400</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/may-tinh-de-ban/imac-24-inch-m4-16gb-512gb" target="_blank" rel="noopener">/may-tinh-de-ban/imac-24-inch-m4-16gb-512gb ↗</a></td>
+  <td class="mono bad">iMac 24 inch M4 16GB/512GB chính hãng, giá tốt</td>
+  <td class="mono">iMac 24 inch M4 16GB/512GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-17-pro-max-1tb" target="_blank" rel="noopener">/dtdd/iphone-17-pro-max-1tb ↗</a></td>
+  <td class="mono bad">Điện thoại iPhone 17 Pro Max 256GB Xanh Đậm chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại iPhone 17 Pro Max 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt ↗</a></td>
+  <td class="mono bad">Tai nghe Bluetooth Chụp Tai Sennheiser HD450BT chính hãng, giá tốt</td>
+  <td class="mono">Tai nghe Bluetooth Chụp Tai Sennheiser HD450BT</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/samsung-galaxy-a37-8gb-128gb" target="_blank" rel="noopener">/dtdd/samsung-galaxy-a37-8gb-128gb ↗</a></td>
+  <td class="mono bad">Điện thoại Samsung Galaxy A37 5G 6GB/128GB Đen chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại Samsung Galaxy A37 5G 6GB/128GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/sac-dtdd/xmobile-45w-ds85c9-kem-cap-type-c" target="_blank" rel="noopener">/sac-dtdd/xmobile-45w-ds85c9-kem-cap-type-c ↗</a></td>
+  <td class="mono bad">Pin sạc dự phòng Polymer 10000mAh Type C PD QC 3.0 45W Xmobile DS85C9 kèm Cáp Type C Đen chính hãng, giá tốt</td>
+  <td class="mono">Pin sạc dự phòng Polymer 10000mAh Type C PD QC 3.0 45W Xmobile DS85C9 kèm Cáp Type C Đen</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/samsung-galaxy-a37-6gb-128gb" target="_blank" rel="noopener">/dtdd/samsung-galaxy-a37-6gb-128gb ↗</a></td>
+  <td class="mono bad">Điện thoại Samsung Galaxy A37 5G 6GB/128GB Đen chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại Samsung Galaxy A37 5G 6GB/128GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-17-pro-512gb" target="_blank" rel="noopener">/dtdd/iphone-17-pro-512gb ↗</a></td>
+  <td class="mono bad">Điện thoại iPhone 17 Pro 256GB Xanh Đậm chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại iPhone 17 Pro 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-18-pro-2tb" target="_blank" rel="noopener">/dtdd/iphone-18-pro-2tb ↗</a></td>
+  <td class="mono bad">iPhone 18 Pro 256GB chính hãng, giá tốt</td>
+  <td class="mono">iPhone 18 Pro 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dong-ho-thong-minh/samsung-galaxy-watch9-bluetooth-40mm-day-silicone" target="_blank" rel="noopener">/dong-ho-thong-minh/samsung-galaxy-watch9-bluetooth-40mm-day-silicone ↗</a></td>
+  <td class="mono bad">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone chính hãng, giá tốt</td>
+  <td class="mono">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/vivo-x300-ultra" target="_blank" rel="noopener">/dtdd/vivo-x300-ultra ↗</a></td>
+  <td class="mono bad">Điện thoại Vivo X300 Ultra 16GB/512GB chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại Vivo X300 Ultra 16GB/512GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-duo-1tb" target="_blank" rel="noopener">/dtdd/iphone-duo-1tb ↗</a></td>
+  <td class="mono bad">iPhone Duo 256GB chính hãng, giá tốt</td>
+  <td class="mono">iPhone Duo 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+<tr>
+  <td><a href="https://www.thegioididong.com/dtdd/iphone-17-pro" target="_blank" rel="noopener">/dtdd/iphone-17-pro ↗</a></td>
+  <td class="mono bad">Điện thoại iPhone 17 Pro 256GB Xanh Đậm chính hãng, giá tốt</td>
+  <td class="mono">Điện thoại iPhone 17 Pro 256GB</td>
+  <td><span class="badge bad-b">Đuôi rác quảng cáo</span> <span class="badge bad-b">Chứa dung lượng / màu</span></td>
+</tr>
+</table>
+
+<h2>4. Quy tắc chuẩn để IT xử lý</h2>
+<div class="card">
+<ol>
+  <li><b>ProductGroup.name:</b> Là tên chung của dòng sản phẩm (dùng chung cho mọi phiên bản dung lượng/màu của dòng máy đó). Không chứa dung lượng, RAM, màu sắc cụ thể của một biến thể. Ví dụ: <code>Điện thoại iPhone 17 Pro Max</code>, <code>MacBook Air 15 inch M5 16GB/512GB</code>, <code>Điện thoại Samsung Galaxy A37 5G</code>.</li>
+  <li><b>Bỏ từ khóa rác:</b> Xóa bỏ hoàn toàn cụm từ <code> chính hãng, giá tốt</code> (hoặc các từ khuyến mãi, PR) khỏi trường <code>name</code>. Google Search Central cấm spam từ khóa vào name của schema sản phẩm.</li>
+  <li><b>BreadcrumbList mục cuối:</b> Phải sinh động khớp chính xác với phiên bản của URL đang xem. Xem trang 1TB thì breadcrumb cuối là <code>Điện thoại iPhone 17 Pro Max 1TB</code>; xem trang 512GB thì breadcrumb cuối là <code>Điện thoại iPhone 17 Pro Max 512GB</code>.</li>
+</ol>
+</div>
+
+</div></body></html>

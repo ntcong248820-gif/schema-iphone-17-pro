@@ -1,0 +1,103 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A14 minh họa: Chỉ khai aggregateRating khi số đánh giá lớn hơn 0</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:980px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad)}.bad-t{color:var(--bad);font-weight:600}.mono,code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.ok-cell{background:#eef7ee;color:var(--ok);font-weight:600}
+.u{margin:2px 0 6px;font-size:12px}a{color:var(--sel)}.fix{background:#eef7ee;border:1px solid #cfe6cf;border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:12.5px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff}
+.bad-b{background:var(--bad);margin-right:4px}.ok-b{background:var(--ok)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;margin:6px 0}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><div class="w">
+<p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p>
+<h1>A14: Chỉ khai aggregateRating khi số đánh giá lớn hơn 0</h1>
+<p class="mut">Minh họa yêu cầu schema đánh giá sản phẩm. Áp dụng cho cả Product và ProductGroup.</p>
+
+<div class="card"><span class="badge bad-b">Chưa đạt</span>
+<ul>
+  <li><b>Vấn đề:</b> Khi sản phẩm chưa có lượt đánh giá nào, schema hiện tại vẫn xuất khối <code>aggregateRating</code> với <code>ratingCount: 0</code> và <code>reviewCount: 0</code> (trước đây có trường hợp bị số âm do lỗi lấy dữ liệu).</li>
+  <li><b>Hậu quả:</b> Google Search Console quy định số lượng đánh giá bắt buộc phải lớn hơn 0. Khi có khối đánh giá với số <code>0</code> hoặc số âm, Google sẽ báo <b>Lỗi nghiêm trọng (Invalid object)</b> và hủy hiển thị ngôi sao đánh giá trên kết quả tìm kiếm.</li>
+  <li><b>Mong muốn:</b> Chỉ khai báo khối <code>aggregateRating</code> khi sản phẩm thực sự có đánh giá (số lượng > 0). Khi chưa có đánh giá thì <b>không xuất khối này</b>.</li>
+</ul>
+</div>
+
+<h2>1. Minh họa trường hợp sản phẩm chưa có đánh giá (hoặc 0 đánh giá)</h2>
+<section class="card">
+<h3>Ví dụ thực tế trên Live: Tai nghe Bluetooth Awei A930BS</h3>
+<p class="u"><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-awei-a930bs" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-awei-a930bs ↗</a> · Dữ liệu đo thực tế trên website</p>
+
+<table>
+  <tr>
+    <th style="width:25%">Trường</th>
+    <th style="width:40%">Schema hiện tại (Đang bị Google báo lỗi)</th>
+    <th style="width:35%">Mong muốn (Chuẩn Google)</th>
+  </tr>
+  <tr>
+    <td><b>Khối aggregateRating</b></td>
+    <td class="bad">Vẫn xuất khối dù <code>ratingCount: 0</code>, <code>reviewCount: 0</code></td>
+    <td class="ok-cell">Không xuất khối aggregateRating</td>
+  </tr>
+</table>
+
+<div class="cols">
+  <div>
+    <b>Hiện tại (Lỗi: số 0 trong ratingCount/reviewCount)</b>
+    <pre>{
+  &quot;@type&quot;: &quot;Product&quot;,
+  &quot;name&quot;: &quot;Tai nghe Bluetooth Awei A930BS&quot;,
+  &quot;aggregateRating&quot;: {
+    &quot;@type&quot;: &quot;AggregateRating&quot;,
+    &quot;bestRating&quot;: 5,
+    &quot;worstRating&quot;: 1,
+    &quot;ratingValue&quot;: 4.2,
+    &quot;ratingCount&quot;: 0,
+    &quot;reviewCount&quot;: 0
+  }
+}</pre>
+  </div>
+  <div>
+    <b>Mong muốn (Không có đánh giá thì không khai khối)</b>
+    <pre>{
+  &quot;@type&quot;: &quot;Product&quot;,
+  &quot;name&quot;: &quot;Tai nghe Bluetooth Awei A930BS&quot;
+}</pre>
+  </div>
+</div>
+<p class="fix">Khi sản phẩm không có đánh giá (hoặc số đánh giá bằng 0), schema không khai thuộc tính <code>aggregateRating</code>.</p>
+</section>
+
+<h2>2. Minh họa trường hợp sản phẩm CÓ đánh giá hợp lệ (để đối chiếu)</h2>
+<section class="card">
+<h3>Ví dụ sản phẩm có đánh giá: Tai nghe Sennheiser HD450BT</h3>
+<p class="u"><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt ↗</a></p>
+
+<p class="mut">Khi có người đánh giá thực tế (số lượng > 0), khai báo đầy đủ khối đánh giá với các số dương:</p>
+<pre>{
+  &quot;@type&quot;: &quot;Product&quot;,
+  &quot;name&quot;: &quot;Tai nghe Bluetooth Chụp Tai Sennheiser HD450BT&quot;,
+  &quot;aggregateRating&quot;: {
+    &quot;@type&quot;: &quot;AggregateRating&quot;,
+    &quot;bestRating&quot;: 5,
+    &quot;worstRating&quot;: 1,
+    &quot;ratingValue&quot;: 4.6,
+    &quot;ratingCount&quot;: 68,
+    &quot;reviewCount&quot;: 33
+  }
+}</pre>
+</section>
+
+<h2>3. Tóm tắt mong muốn gửi IT</h2>
+<div class="card">
+<ul>
+  <li><b>Sản phẩm đã có đánh giá:</b> Xuất khối <code>aggregateRating</code> với <code>ratingCount > 0</code> (tổng lượt chấm sao) và <code>reviewCount > 0</code> (tổng số bình luận).</li>
+  <li><b>Sản phẩm chưa có đánh giá (hoặc số đánh giá ≤ 0):</b> Không xuất trường <code>aggregateRating</code> trong schema.</li>
+  <li><b>Tuyệt đối không xuất:</b> Giá trị <code>0</code> hoặc số âm trong <code>ratingCount</code> và <code>reviewCount</code>.</li>
+</ul>
+</div>
+
+</div></body></html>

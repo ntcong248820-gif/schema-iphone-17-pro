@@ -1,0 +1,94 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>A5 minh họa: tên biến thể trùng nhau</title>
+<style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:980px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad)}.bad-t{color:var(--bad);font-weight:600}.mono,code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.chip{display:inline-block;width:12px;height:12px;border-radius:50%;border:1px solid #b9bfc9;margin-right:6px;vertical-align:-1px}
+.u{margin:2px 0 6px;font-size:12px}a{color:var(--sel)}.fix{background:#eef7ee;border:1px solid #cfe6cf;border-radius:8px;padding:8px 10px;margin:8px 0 0;font-size:12.5px}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff;background:var(--bad)}.ok{background:var(--ok)}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;margin:6px 0}
+@media(max-width:700px){.cols{grid-template-columns:1fr}}
+</style></head><body><div class="w">
+<p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p>
+<h1>A5: Tên biến thể trùng nhau vì thiếu màu</h1>
+<p class="mut">Minh họa trên URL thật, đo ngày 12/10/2026. Yêu cầu A5: tên biến thể = dòng + dung lượng + màu.</p>
+<div class="card"><span class="badge">Chưa đạt</span>
+<ul><li>Trang sản phẩm có nút chọn màu cho từng biến thể (mỗi nút là một sku riêng).</li>
+<li>Ở 6 nhóm bên dưới, schema <b>không có màu của từng biến thể</b> (trường <code>color</code> trống) nên tên không có màu, nhiều biến thể mang <b>cùng một tên</b>.</li>
+<li>Nhóm đã có <code>color</code> thì tên đã đúng (xem ví dụ đúng).</li></ul></div>
+
+<h2>Ví dụ đúng (để so sánh)</h2>
+<section class="card"><h3>iPhone 17 Pro 512GB</h3><p class="u"><a href="https://www.thegioididong.com/dtdd/iphone-17-pro-512gb" target="_blank" rel="noopener">/dtdd/iphone-17-pro-512gb ↗</a> · các biến thể 512GB của trang này</p><table><tr><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td>iPhone 17 Pro 512GB Xanh Đậm</td><td>Xanh Đậm</td><td class="mono">0131491004715</td></tr><tr><td>iPhone 17 Pro 512GB Cam Vũ Trụ</td><td>Cam Vũ Trụ</td><td class="mono">0131491004716</td></tr><tr><td>iPhone 17 Pro 512GB Bạc</td><td>Bạc</td><td class="mono">0131491004717</td></tr></table>
+<p class="mut" style="margin:6px 0 0;font-size:12px">Mỗi màu một tên riêng, <code>color</code> có giá trị. Đây là dạng cần đạt ở mọi nhóm.</p></section>
+
+<h2>Ví dụ lỗi: 6 nhóm có tên trùng nhau</h2>
+<p class="mut">Ô đỏ = nhiều biến thể mang cùng một tên. Cột trái là màu của nút chọn trên trang thật.</p>
+<section class="card"><h3>Tai nghe Bluetooth Chụp Tai Sony WH-1000XX</h3>
+<p class="u"><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-chup-tai-sony-wh-1000xx" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-chup-tai-sony-wh-1000xx ↗</a> · 2 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#ffffff"></span>Trắng</td><td class="bad">Tai nghe Chụp Tai Sony WH-1000XX</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000424</td></tr><tr><td><span class="chip" style="background:#1f2328"></span>Đen</td><td class="bad">Tai nghe Chụp Tai Sony WH-1000XX</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000423</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Tai nghe Chụp Tai Sony WH-1000XX Trắng</span><br><span class="mono">Tai nghe Chụp Tai Sony WH-1000XX Đen</span></p></section>
+<section class="card"><h3>Tai nghe Bluetooth True Wireless Xiaomi Buds 6</h3>
+<p class="u"><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-true-wireless-xiaomi-buds-6" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-true-wireless-xiaomi-buds-6 ↗</a> · 4 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#8b9098"></span>Xám</td><td class="bad">Tai nghe TWS Xiaomi Buds 6</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000407</td></tr><tr><td><span class="chip" style="background:#ffffff"></span>Trắng</td><td class="bad">Tai nghe TWS Xiaomi Buds 6</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000406</td></tr><tr><td><span class="chip" style="background:#8e5ac8"></span>Tím</td><td class="bad">Tai nghe TWS Xiaomi Buds 6</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000408</td></tr><tr><td><span class="chip" style="background:#1f2328"></span>Đen</td><td class="bad">Tai nghe TWS Xiaomi Buds 6</td><td><span class="bad-t">trống</span></td><td class="mono">0164540000405</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Tai nghe TWS Xiaomi Buds 6 Xám</span><br><span class="mono">Tai nghe TWS Xiaomi Buds 6 Trắng</span><br><span class="mono">Tai nghe TWS Xiaomi Buds 6 Tím</span><br><span class="mono">Tai nghe TWS Xiaomi Buds 6 Đen</span></p></section>
+<section class="card"><h3>Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro</h3>
+<p class="u"><a href="https://www.thegioididong.com/day-dong-ho/day-da-redmi-watch-5-band-8-pro-9-pro" target="_blank" rel="noopener">/day-dong-ho/day-da-redmi-watch-5-band-8-pro-9-pro ↗</a> · 3 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#f59e0b"></span>Cam</td><td class="bad">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro</td><td><span class="bad-t">trống</span></td><td class="mono">0233419000192</td></tr><tr><td><span class="chip" style="background:#f3ead9"></span>Trắng - Kem</td><td class="bad">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro</td><td><span class="bad-t">trống</span></td><td class="mono">0233419000194</td></tr><tr><td><span class="chip" style="background:#f472b6"></span>Hồng</td><td class="bad">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro</td><td><span class="bad-t">trống</span></td><td class="mono">0233419000186</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro Cam</span><br><span class="mono">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro Trắng - Kem</span><br><span class="mono">Dây da Redmi Watch 4/5/Band 8 Pro/9 Pro Hồng</span></p></section>
+<section class="card"><h3>Tai nghe Bluetooth Chụp Tai Sennheiser HD450BT</h3>
+<p class="u"><a href="https://www.thegioididong.com/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt" target="_blank" rel="noopener">/tai-nghe/tai-nghe-bluetooth-chup-tai-sennheiser-hd450bt ↗</a> · 2 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#ffffff"></span>Trắng</td><td class="bad">Tai nghe Chụp Tai Sennheiser HD450BT</td><td><span class="bad-t">trống</span></td><td class="mono">0163346000832</td></tr><tr><td><span class="chip" style="background:#1f2328"></span>Đen</td><td class="bad">Tai nghe Chụp Tai Sennheiser HD450BT</td><td><span class="bad-t">trống</span></td><td class="mono">0163346000831</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Tai nghe Chụp Tai Sennheiser HD450BT Trắng</span><br><span class="mono">Tai nghe Chụp Tai Sennheiser HD450BT Đen</span></p></section>
+<section class="card"><h3>Samsung Galaxy Watch9 Bluetooth 40mm dây silicone</h3>
+<p class="u"><a href="https://www.thegioididong.com/dong-ho-thong-minh/samsung-galaxy-watch9-bluetooth-40mm-day-silicone" target="_blank" rel="noopener">/dong-ho-thong-minh/samsung-galaxy-watch9-bluetooth-40mm-day-silicone ↗</a> · 2 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#1f2328"></span>Đen</td><td class="bad">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone</td><td><span class="bad-t">trống</span></td><td class="mono">0232391002928</td></tr><tr><td><span class="chip" style="background:#ffffff"></span>Trắng</td><td class="bad">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone</td><td><span class="bad-t">trống</span></td><td class="mono">0232391002927</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone Đen</span><br><span class="mono">Samsung Galaxy Watch9 Bluetooth 40mm dây silicone Trắng</span></p></section>
+<section class="card"><h3>Điện thoại Vivo X300 Ultra 16GB/512GB</h3>
+<p class="u"><a href="https://www.thegioididong.com/dtdd/vivo-x300-ultra" target="_blank" rel="noopener">/dtdd/vivo-x300-ultra ↗</a> · 2 biến thể, 1 tên khác nhau</p><table><tr><th>Nút chọn màu trên trang</th><th>Tên biến thể trong schema</th><th>color trong schema</th><th>sku</th></tr><tr><td><span class="chip" style="background:#1f2328"></span>Đen</td><td class="bad">Vivo X300 Ultra 16GB/512GB</td><td><span class="bad-t">trống</span> <span class="mut">(màu đang nằm ở <code>size</code>: Đen)</span></td><td class="mono">0131491005207</td></tr><tr><td><span class="chip" style="background:#22a35a"></span>Xanh lá</td><td class="bad">Vivo X300 Ultra 16GB/512GB</td><td><span class="bad-t">trống</span> <span class="mut">(màu đang nằm ở <code>size</code>: Xanh lá)</span></td><td class="mono">0131491005206</td></tr></table>
+<p class="fix"><b>Cần ra</b> (tên = tên hiện tại + màu của nút chọn):<br><span class="mono">Vivo X300 Ultra 16GB/512GB Đen</span><br><span class="mono">Vivo X300 Ultra 16GB/512GB Xanh lá</span></p></section>
+
+<h2>Schema hiện tại và schema cần ra (ví dụ Xiaomi Buds 6: ProductGroup › hasVariant)</h2>
+<p class="mut">Lỗi A5 nằm ở tên từng biến thể con (<code>hasVariant[*].name</code>) trong <code>ProductGroup</code>. Mỗi biến thể con trong schema.org mang <code>@type: Product</code>.</p>
+<div class="cols"><div><b>Hiện tại (2 biến thể bị trùng tên, thiếu color)</b><pre>{
+  &quot;@type&quot;: &quot;ProductGroup&quot;,
+  &quot;name&quot;: &quot;Tai nghe Bluetooth True Wireless Xiaomi Buds 6&quot;,
+  &quot;hasVariant&quot;: [
+    {
+      &quot;@type&quot;: &quot;Product&quot;,
+      &quot;name&quot;: &quot;Tai nghe TWS Xiaomi Buds 6&quot;,
+      &quot;sku&quot;: &quot;0164540000407&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;Product&quot;,
+      &quot;name&quot;: &quot;Tai nghe TWS Xiaomi Buds 6&quot;,
+      &quot;sku&quot;: &quot;0164540000406&quot;
+    },
+    &quot;... (còn 2 biến thể khác)&quot;
+  ]
+}</pre></div><div><b>Cần ra (tên phân biệt theo màu, có color)</b><pre>{
+  &quot;@type&quot;: &quot;ProductGroup&quot;,
+  &quot;name&quot;: &quot;Tai nghe Bluetooth True Wireless Xiaomi Buds 6&quot;,
+  &quot;hasVariant&quot;: [
+    {
+      &quot;@type&quot;: &quot;Product&quot;,
+      &quot;name&quot;: &quot;Tai nghe TWS Xiaomi Buds 6 Xám&quot;,
+      &quot;color&quot;: &quot;Xám&quot;,
+      &quot;sku&quot;: &quot;0164540000407&quot;
+    },
+    {
+      &quot;@type&quot;: &quot;Product&quot;,
+      &quot;name&quot;: &quot;Tai nghe TWS Xiaomi Buds 6 Trắng&quot;,
+      &quot;color&quot;: &quot;Trắng&quot;,
+      &quot;sku&quot;: &quot;0164540000406&quot;
+    },
+    &quot;... (còn 2 biến thể khác)&quot;
+  ]
+}</pre></div></div>
+
+<h2>Ghi chú thêm</h2>
+<ul>
+<li><b>Vivo X300 Ultra</b>: màu đã có nhưng nằm sai chỗ, trong trường <code>size</code> (Đen, Xanh lá). Cần chuyển sang <code>color</code> và đưa vào tên.</li>
+<li>Thuộc tính "Màu sắc master" trong thông số của trang mang <b>một giá trị chung cho mọi sku</b> (vd Xiaomi Buds 6: cả 4 sku đều ghi "Tím", nút chọn thì Đen, Trắng, Xám, Tím). Không dùng nó làm màu của từng biến thể.</li>
+<li>Xmobile 45W và Jansport Fifth Avenue có tên đã chứa màu nên không trùng, nhưng cũng chưa có trường <code>color</code>.</li>
+<li>iMac 24 inch M4 chỉ có 1 biến thể.</li>
+</ul>
+</div></body></html>

@@ -1,0 +1,41 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X1 ĐMX: sku là mã sản phẩm thật</title><style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:980px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad);font-weight:600}td.ok{background:#eef7ee;color:var(--ok);font-weight:600}tr.bad td{background:#fdecea}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;margin:6px 0}
+a{color:var(--sel)}.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff;background:var(--bad);margin-right:6px}
+.badge.only{background:#ef6c00}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.u{margin:2px 0 6px;font-size:12px}
+.bar{display:grid;grid-template-columns:150px 1fr 150px;gap:8px;align-items:center;margin:6px 0}.bt{background:#eef0f4;border-radius:6px;height:22px;overflow:hidden}
+.bf{background:var(--bad);height:100%}.bl{font-weight:600;font-size:12.5px}.bn{font-size:12px;color:var(--mut)}
+@media(max-width:700px){.cols{grid-template-columns:1fr}.bar{grid-template-columns:1fr}}
+</style></head><body><div class="w"><p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p><h1>X1 (ĐMX): sku là mã sản phẩm thật, không phải &quot;0&quot;</h1><p class="mut">Lỗi riêng ĐMX ở mức hệ thống. TGDĐ chỉ lẻ tẻ vài sản phẩm.</p>
+<div class="card"><span class="badge">Chưa đạt</span><span class="badge only">ĐMX nặng, TGDĐ gần như không có</span>
+<ul>
+ <li><b>Hiện tại:</b> 20/20 trang sản phẩm <b>không có biến thể</b> của ĐMX đều ra <code>"sku": "0"</code>, dùng chung một mã cho mọi sản phẩm.</li>
+ <li><b>Đối chiếu:</b> Trang sản phẩm <b>có biến thể</b> của ĐMX khai sku từng biến thể đúng. Nên lỗi nằm ở nhánh xuất schema của trang không biến thể.</li>
+ <li><b>Mong muốn:</b> <code>sku</code> là mã bán hàng của đúng sản phẩm của trang, mỗi sản phẩm một mã. Không có mã thì bỏ trường <code>sku</code>, không để <code>"0"</code>.</li>
+</ul></div>
+<h2>1. So với TGDĐ</h2>
+<div class="card"><table><tr><th>Site</th><th>Sản phẩm đơn đo</th><th>Có sku "0"</th></tr>
+<tr><td><b>ĐMX</b> (14/10)</td><td>20</td><td class="bad">20 / 20</td></tr>
+<tr><td><b>TGDĐ</b> (13/10)</td><td>20</td><td>2 / 20 (Android Box 8GB/128GB Vietmap BS10, Giá treo màn hình Brateck BT-AMA-B)</td></tr></table>
+<p class="mut" style="margin:4px 0 0">TGDĐ chỉ vài phụ kiện lẻ, ĐMX là toàn bộ nhóm sản phẩm đơn. Trong mẫu ĐMX, số sản phẩm sku "0" theo ngành:</p>
+<table style="max-width:340px"><tr><th>Ngành</th><th>Số trang</th></tr><tr><td>Máy giặt</td><td class="bad">5</td></tr><tr><td>Máy lọc nước</td><td class="bad">5</td></tr><tr><td>Tủ lạnh</td><td class="bad">5</td></tr><tr><td>Máy lạnh</td><td class="bad">3</td></tr><tr><td>Nồi cơm điện</td><td class="bad">2</td></tr></table></div>
+<h2>2. Ví dụ thật</h2>
+<section class="card"><h3>Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1</h3><p class="u">/may-giat/may-giat-haier-inverter-18-kg-hw180-bd14387gnu1 · Staging</p>
+<div class="cols"><div><b style="color:var(--bad)">Hiện tại</b><pre>{
+  &quot;@type&quot;: &quot;Product&quot;,
+  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,
+  &quot;sku&quot;: &quot;0&quot;
+}</pre></div>
+<div><b style="color:var(--ok)">Mong muốn</b><pre>{
+  &quot;@type&quot;: &quot;Product&quot;,
+  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,
+  &quot;sku&quot;: &quot;&lt;mã bán hàng của đúng sản phẩm này&gt;&quot;
+}</pre></div></div>
+<p class="mut" style="margin:6px 0 0">Đối chiếu một biến thể của sản phẩm có biến thể (/dien-thoai/iphone-17-pro-max-512gb): <code>"sku": "0131491004725"</code>, là mã thật.</p></section>
+<h2>3. Tiêu chí nghiệm thu ĐẠT</h2>
+<div class="card"><ul><li>0 trang sản phẩm có <code>sku</code> là <code>"0"</code>.</li><li>Hai sản phẩm khác nhau không dùng chung một sku.</li><li>Không có mã bán hàng thì không có trường <code>sku</code>.</li></ul></div></div></body></html>

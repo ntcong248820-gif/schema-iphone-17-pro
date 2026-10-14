@@ -1,0 +1,39 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>X7 ĐMX: trang hãng liệt kê đủ 10 sản phẩm</title><style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:980px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad);font-weight:600}td.ok{background:#eef7ee;color:var(--ok);font-weight:600}tr.bad td{background:#fdecea}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{background:#0f172a;color:#e2e8f0;padding:10px;border-radius:8px;overflow:auto;margin:6px 0}
+a{color:var(--sel)}.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff;background:var(--bad);margin-right:6px}
+.badge.only{background:#ef6c00}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.u{margin:2px 0 6px;font-size:12px}
+.bar{display:grid;grid-template-columns:150px 1fr 150px;gap:8px;align-items:center;margin:6px 0}.bt{background:#eef0f4;border-radius:6px;height:22px;overflow:hidden}
+.bf{background:var(--bad);height:100%}.bl{font-weight:600;font-size:12.5px}.bn{font-size:12px;color:var(--mut)}
+@media(max-width:700px){.cols{grid-template-columns:1fr}.bar{grid-template-columns:1fr}}
+</style></head><body><div class="w"><p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p><h1>X7 (ĐMX): trang hãng liệt kê đủ 10 sản phẩm đang kinh doanh</h1><p class="mut">Lỗi riêng ĐMX, TGDĐ luôn liệt kê đủ.</p>
+<div class="card"><span class="badge">Chưa đạt</span><span class="badge only">Chỉ ĐMX: TGDĐ 18/18 trang đủ</span>
+<ul>
+ <li><b>Rule:</b> Trang có từ 10 sản phẩm thì danh sách trong schema (<code>itemListElement</code>) liệt kê đủ <b>10 sản phẩm đang kinh doanh</b>. Tổng số của cả trang khai ở <code>numberOfItems</code>.</li>
+ <li><b>Hiện tại (ĐMX):</b> 5/21 trang có từ 10 sản phẩm bị lỗi. Trang hãng liệt kê chỉ 5 đến 8 mục dù trang có từ 17 đến 89 sản phẩm. Số tổng <code>numberOfItems</code> vẫn đúng, lỗi nằm ở danh sách bên trong.</li>
+ <li><b>Thêm một lỗi:</b> 2 trang có <b>mục rỗng</b> trong danh sách (không có tên, đường dẫn là <code>//</code>), nên số sản phẩm thật còn thấp hơn số mục.</li>
+ <li><b>Mong muốn:</b> Liệt kê đủ 10 sản phẩm thật đầu trang, không có mục rỗng.</li>
+</ul></div>
+<h2>1. Các trang đang lỗi</h2>
+<div class="card"><div class="bar"><span class="bl"><code>/tivi</code></span><div class="bt"><div class="bf" style="width:90%"></div></div><span class="bn">liệt kê 10 / cần 10, 1 mục rỗng · tổng 304</span></div><div class="bar"><span class="bl"><code>/tivi-samsung</code></span><div class="bt"><div class="bf" style="width:50%"></div></div><span class="bn">liệt kê 6 / cần 10, 1 mục rỗng · tổng 89</span></div><div class="bar"><span class="bl"><code>/tivi-lg</code></span><div class="bt"><div class="bf" style="width:50%"></div></div><span class="bn">liệt kê 5 / cần 10 · tổng 60</span></div><div class="bar"><span class="bl"><code>/may-lanh-daikin</code></span><div class="bt"><div class="bf" style="width:80%"></div></div><span class="bn">liệt kê 8 / cần 10 · tổng 20</span></div><div class="bar"><span class="bl"><code>/may-lanh-panasonic</code></span><div class="bt"><div class="bf" style="width:80%"></div></div><span class="bn">liệt kê 8 / cần 10 · tổng 17</span></div><p class="mut" style="margin:6px 0 0">Còn 16 trang ĐMX khác có từ 10 sản phẩm đều liệt kê đủ 10 (tivi LG 32 inch, tủ lạnh Panasonic, máy giặt LG, điện thoại Samsung, laptop Dell…).</p></div>
+<h2>2. So với TGDĐ</h2>
+<div class="card"><table><tr><th>Site</th><th>Trang từ 10 sản phẩm</th><th>Liệt kê thiếu hoặc có mục rỗng</th></tr>
+<tr><td><b>ĐMX</b> (14/10)</td><td>21</td><td class="bad">5 / 21</td></tr>
+<tr><td><b>TGDĐ</b> (13/10)</td><td>18</td><td class="ok">0 / 18</td></tr></table></div>
+<h2>3. Mục rỗng trong danh sách</h2>
+<section class="card"><p class="u">/tivi · mục đầu tiên của danh sách · Staging</p><pre>{
+  &quot;@type&quot;: &quot;ListItem&quot;,
+  &quot;position&quot;: 1,
+  &quot;item&quot;: {
+    &quot;@type&quot;: &quot;Product&quot;,
+    &quot;url&quot;: &quot;https://www.dienmayxanh.com//&quot;
+  }
+}</pre>
+<p class="mut" style="margin:6px 0 0">Mục này không có <code>name</code>, <code>url</code> trỏ về <code>//</code>. Nên bỏ hoặc thay bằng sản phẩm thật.</p></section>
+<h2>4. Tiêu chí nghiệm thu ĐẠT</h2>
+<div class="card"><ul><li>Trang có từ 10 sản phẩm: liệt kê đủ 10 mục, mỗi mục có tên và đường dẫn sản phẩm thật.</li><li>Trang có dưới 10 sản phẩm: liệt kê đủ số có.</li><li>Đo trên 21 trang ĐMX có từ 10 sản phẩm, 0 trang lỗi.</li></ul></div></div></body></html>

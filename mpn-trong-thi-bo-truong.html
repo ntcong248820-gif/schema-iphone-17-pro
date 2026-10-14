@@ -19,7 +19,7 @@ a{color:var(--sel)}.fix{background:#eef7ee;border:1px solid #cfe6cf;border-radiu
 .bf{background:var(--bad);color:#fff;height:100%;font-size:12px;font-weight:600;line-height:24px;padding-left:8px;white-space:nowrap}.bl{font-weight:700}.bn{font-size:12px;color:var(--mut)}
 .shots{display:grid;grid-template-columns:1fr 1fr;gap:10px}.shots img{width:100%;border:1px solid var(--line);border-radius:8px}.shots figcaption{font-size:12px;color:var(--mut);margin-top:4px}
 @media(max-width:700px){.cols,.shots{grid-template-columns:1fr}.flow{grid-template-columns:1fr}.arrow{transform:rotate(90deg)}.bar{grid-template-columns:1fr}}
-</style></head><body><div class="w">
+.ln{display:block;white-space:pre-wrap;word-break:break-word;padding:0 10px}.ln.bad{background:#5b1f1f;color:#ffd6d6}.ln.ok{background:#17391d;color:#c8f0cf}.ln .note{color:#ffb4b4}.ln.ok .note{color:#a5e8b2}.how{background:#eef3fd;border:1px solid #c9d8f6;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:12.5px}pre{padding:10px 0}</style></head><body><div class="w">
 <p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p>
 <h1>M19: mpn lấy từ PIM, trống thì bỏ trường</h1>
 <p class="mut">Áp dụng cho TGDĐ và ĐMX. Bên lead ĐMX đề nghị: sản phẩm không có mã mpn thì không đưa trường này lên schema. Đây là rule M19 và M19b đã có trong viewer, trang này minh họa và ghi số đo trên Staging.</p>
@@ -55,35 +55,17 @@ a{color:var(--sel)}.fix{background:#eef7ee;border:1px solid #cfe6cf;border-radiu
 <h2>3. Ví dụ thật: hiện tại và mong muốn</h2>
 <section class="card">
 <h3>ĐMX: sản phẩm đơn có sku "0"</h3>
-<p class="u">/may-giat/may-giat-haier-inverter-18-kg-hw180-bd14387gnu1 · Staging</p>
+<div class="how"><b>Trang bị lỗi:</b> <a href="https://staging.dienmayxanh.com/may-giat/may-giat-haier-inverter-18-kg-hw180-bd14387gnu1?webnew=2" target="_blank" rel="noopener">https://staging.dienmayxanh.com/may-giat/may-giat-haier-inverter-18-kg-hw180-bd14387gnu1?webnew=2 ↗</a><br><b>Kiểm nhanh:</b> mở link (bản Staging, web mới), bấm Ctrl+U xem mã nguồn, Ctrl+F tìm <code>&quot;mpn&quot;</code>.</div>
 <div class="cols">
-  <div><b class="bad-t" style="color:var(--bad)">Hiện tại (mpn = "0")</b><pre>{
-  &quot;@type&quot;: &quot;Product&quot;,
-  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,
-  &quot;sku&quot;: &quot;0&quot;,
-  &quot;mpn&quot;: &quot;0&quot;
-}</pre></div>
-  <div><b style="color:var(--ok)">Mong muốn (PIM trống thì không có mpn)</b><pre>{
-  &quot;@type&quot;: &quot;Product&quot;,
-  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,
-  &quot;sku&quot;: &quot;0&quot;
-}</pre></div>
+  <div><b class="bad-t" style="color:var(--bad)">Hiện tại (mpn = "0")</b><pre><span class="ln">{</span><span class="ln">  &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,</span><span class="ln bad">  &quot;sku&quot;: &quot;0&quot;,<span class="note">   ← sku cũng &quot;0&quot;, xem X1</span></span><span class="ln bad">  &quot;mpn&quot;: &quot;0&quot;<span class="note">   ← sai: mpn = &quot;0&quot; (bằng sku)</span></span><span class="ln">}</span></pre></div>
+  <div><b style="color:var(--ok)">Mong muốn (PIM trống thì không có mpn)</b><pre><span class="ln">{</span><span class="ln">  &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">  &quot;name&quot;: &quot;Máy giặt Haier Inverter 18 kg HW180-BD14387GNU1&quot;,</span><span class="ln">  &quot;sku&quot;: &quot;0&quot;,</span><span class="ln ok">  &quot;mpn&quot;: /* PIM trống thì không khai trường mpn */<span class="note">   ← bỏ hẳn trường</span></span><span class="ln">}</span></pre></div>
 </div></section>
 <section class="card">
 <h3>TGDĐ: biến thể có mpn trùng sku</h3>
-<p class="u">/laptop/macbook-air-13-inch-m5-16gb-512gb · Staging</p>
+<div class="how"><b>Trang bị lỗi:</b> <a href="https://staging.thegioididong.com/laptop/macbook-air-13-inch-m5-16gb-512gb" target="_blank" rel="noopener">https://staging.thegioididong.com/laptop/macbook-air-13-inch-m5-16gb-512gb ↗</a><br><b>Kiểm nhanh:</b> mở link (bản Staging, web mới), bấm Ctrl+U xem mã nguồn, Ctrl+F tìm <code>&quot;mpn&quot;</code>.</div>
 <div class="cols">
-  <div><b style="color:var(--bad)">Hiện tại (mpn = sku)</b><pre>{
-  &quot;@type&quot;: &quot;Product&quot;,
-  &quot;name&quot;: &quot;MacBook Air 13 inch M5 16GB/512GB/8GPU 30W Vàng&quot;,
-  &quot;sku&quot;: &quot;0220042003703&quot;,
-  &quot;mpn&quot;: &quot;0220042003703&quot;
-}</pre></div>
-  <div><b style="color:var(--ok)">Mong muốn (PIM trống thì không có mpn)</b><pre>{
-  &quot;@type&quot;: &quot;Product&quot;,
-  &quot;name&quot;: &quot;MacBook Air 13 inch M5 16GB/512GB/8GPU 30W Vàng&quot;,
-  &quot;sku&quot;: &quot;0220042003703&quot;
-}</pre></div>
+  <div><b style="color:var(--bad)">Hiện tại (mpn = sku)</b><pre><span class="ln">{</span><span class="ln">  &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">  &quot;name&quot;: &quot;MacBook Air 13 inch M5 16GB/512GB/8GPU 30W Vàng&quot;,</span><span class="ln">  &quot;sku&quot;: &quot;0220042003703&quot;,</span><span class="ln bad">  &quot;mpn&quot;: &quot;0220042003703&quot;<span class="note">   ← sai: mpn đang bằng sku</span></span><span class="ln">}</span></pre></div>
+  <div><b style="color:var(--ok)">Mong muốn (PIM trống thì không có mpn)</b><pre><span class="ln">{</span><span class="ln">  &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">  &quot;name&quot;: &quot;MacBook Air 13 inch M5 16GB/512GB/8GPU 30W Vàng&quot;,</span><span class="ln">  &quot;sku&quot;: &quot;0220042003703&quot;,</span><span class="ln ok">  &quot;mpn&quot;: /* PIM trống thì không khai trường mpn */<span class="note">   ← bỏ hẳn trường</span></span><span class="ln">}</span></pre></div>
 </div></section>
 <section class="card">
 <h3>Khi PIM đã có dữ liệu</h3>

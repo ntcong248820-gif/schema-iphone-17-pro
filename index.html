@@ -145,11 +145,11 @@ table.mx.trkt td{vertical-align:top}table.mx.trkt td.l{min-width:220px}
 .trkt .fx{display:flex;gap:6px;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
 .trkt .fx input{width:18px;height:18px;cursor:pointer}.trkt .fx input:disabled{cursor:not-allowed}
 .trkt .st{display:block;margin-top:4px;font-size:11px;color:var(--mut)}.trkt .st.er{color:#c5221f}.trkt .st.wn{color:#b06000;font-weight:600}
-.trkt .sitecell{white-space:nowrap}.trkt .sitecell .qb{font-size:10px;padding:0 6px;margin:3px 0 0;display:inline-block;color:#fff;border-radius:10px;font-weight:700}
+.trkt .sitecell{min-width:150px}.trkt .sitecell .cnt{font-size:11.5px;color:var(--mut)}.trkt .pgs{font-size:11.5px;line-height:1.5;margin-top:4px;max-width:200px;margin-left:auto;margin-right:auto}.trkt .cat{font-size:10.5px;margin-top:3px}.trkt .sitecell .qb{font-size:10px;padding:0 6px;margin:3px 0 0;display:inline-block;color:#fff;border-radius:10px;font-weight:700}
 .trkt .sitecell .qb.fail{background:#c62828}.trkt .sitecell .qb.pass{background:#2e7d32}.trkt .sitecell .qb.part{background:#ef6c00}.trkt .sitecell .qb.none{background:#9aa0a6}
 .trkt .qsite{margin:0 0 6px}.trkt .qsite>b{display:inline-block;min-width:44px}
 .trkfoot{margin-top:10px;font-size:12px;color:var(--mut)}
-main.trk{grid-template-columns:268px minmax(0,1fr)}main.trk .detail{display:none}
+main.trk{grid-template-columns:268px minmax(0,1fr)}main.trk .detail{display:none}main.trk #listH,main.trk #noteList,main.trk #catFilter{display:none}table.mx.trkt td.qc{min-width:250px}.trkt textarea{min-width:170px}
 @media(max-width:1180px){main.trk{grid-template-columns:1fr}}
 </style>
 </head>
@@ -184,7 +184,7 @@ const CATL=DATA.cat, NOTES=DATA.notes, ITO=DATA.itOwner||{};
 const itRank=n=>{const k=Object.keys(ITO).indexOf(NOTES[n].it);return k<0?99:k;};
 const itTag=o=>o&&o.it&&ITO[o.it]?`<span class="itp ${o.it}">${esc(ITO[o.it])}</span>`:'';
 const CATS=['LOI','MOI'];
-const ST={view:'json',full:false,site:'tgdd',page:'__ov',block:0,mode:'both',only:false,note:null,rowSel:null,catOff:{}};
+const ST={view:'json',full:false,site:'tgdd',page:'__trk',block:0,mode:'both',only:false,note:null,rowSel:null,catOff:{}};
 const collapsed={}; // key site|page|block -> {gid:true/false}
 const $=s=>document.querySelector(s);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -193,7 +193,7 @@ function save(){try{localStorage.setItem('smvht',JSON.stringify({site:ST.site,mo
 const SITE=()=>DATA.sites[ST.site];
 /* ---------- theo dõi sửa lỗi (IT báo sửa, lưu ở Google Sheet qua Apps Script) ---------- */
 const TRK=DATA.tracker||[],API=DATA.trackerApi||'';
-const TS={rows:Object.assign({},(DATA.trackerSnap&&DATA.trackerSnap.rows)||{}),src:'snap',at:(DATA.trackerSnap&&DATA.trackerSnap.at)||'',err:'',msg:{},dirty:{},busy:{}};
+const TS={rows:Object.assign({},(DATA.trackerSnap&&DATA.trackerSnap.rows)||{}),src:'snap',at:(DATA.trackerSnap&&DATA.trackerSnap.at)||'',err:'',msg:{},dirty:{},busy:{},want:{},again:{}};
 let CRED={name:'',pw:''};
 try{const q=JSON.parse(localStorage.getItem('smvht_trk')||'{}');if(q.name)CRED.name=String(q.name);if(q.pw)CRED.pw=String(q.pw);}catch(e){}
 function saveCred(){try{localStorage.setItem('smvht_trk',JSON.stringify(CRED));}catch(e){}}
@@ -211,18 +211,26 @@ async function trkLoad(){
 }
 async function trkSave(key,patch){
   if(!API||!CRED.pw||!CRED.name){TS.msg[key]={t:'Nhập tên và mật khẩu ở thanh phía trên trước khi sửa.',c:'er'};trkRowStatus(key);return;}
-  const cur=trkRow(key);
-  const body={pw:CRED.pw,by:CRED.name,key,fixed:('fixed' in patch)?patch.fixed:cur.fixed,note:('note' in patch)?patch.note:cur.note};
-  TS.busy[key]=true;TS.msg[key]={t:'Đang lưu…',c:''};trkRowStatus(key);
-  try{
-    const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
-    const j=await r.json();
-    if(j.ok){TS.rows[key]=j.row;TS.msg[key]=null;delete TS.dirty[key];}
-    else{const m={wrong_password:'Mật khẩu chưa đúng, nhập lại ở thanh phía trên.',locked:'Nhập sai quá nhiều lần, thử lại sau 1 giờ.',unknown_key:'Mã này không có trong danh sách.',bad_name:'Tên không hợp lệ (1 đến 40 ký tự).',note_too_long:'Note dài quá 500 ký tự.',busy:'Hệ thống đang bận, bấm lại sau vài giây.'};
-      TS.msg[key]={t:m[j.error]||'Không lưu được, thử lại.',c:'er'};
-      if(j.error==='wrong_password'){CRED.pw='';saveCred();trkDrawBar();trkLock();}}
-  }catch(e){TS.msg[key]={t:'Không kết nối được Google Sheet, chưa lưu. Thử lại sau.',c:'er'};}
-  TS.busy[key]=false;trkRefresh();
+  // trạng thái mong muốn của dòng = bản đang chờ (nếu có) gộp thêm thay đổi mới: tick rồi gõ note liền tay không làm mất tick
+  const cur=TS.want[key]||trkRow(key);
+  TS.want[key]=Object.assign({fixed:cur.fixed,note:cur.note},patch);
+  if(TS.busy[key]){TS.again[key]=true;return;} // đang lưu dòng này: lưu tiếp bản mới nhất sau khi xong, không gửi chồng nhau
+  TS.busy[key]=true;
+  do{
+    TS.again[key]=false;
+    const w=TS.want[key];
+    const body={pw:CRED.pw,by:CRED.name,key,fixed:w.fixed,note:w.note};
+    TS.msg[key]={t:'Đang lưu…',c:''};trkRowStatus(key);
+    try{
+      const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
+      const j=await r.json();
+      if(j.ok){TS.rows[key]=j.row;TS.msg[key]=null;if(!TS.again[key])delete TS.dirty[key];}
+      else{const m={wrong_password:'Mật khẩu chưa đúng, nhập lại ở thanh phía trên.',locked:'Nhập sai quá nhiều lần, thử lại sau 1 giờ.',unknown_key:'Mã này không có trong danh sách.',bad_name:'Tên không hợp lệ (1 đến 40 ký tự).',note_too_long:'Note dài quá 500 ký tự.',busy:'Hệ thống đang bận, bấm lại sau vài giây.'};
+        TS.msg[key]={t:m[j.error]||'Không lưu được, thử lại.',c:'er'};TS.again[key]=false;
+        if(j.error==='wrong_password'){CRED.pw='';saveCred();trkDrawBar();trkLock();}}
+    }catch(e){TS.msg[key]={t:'Không kết nối được Google Sheet, chưa lưu. Thử lại sau.',c:'er'};TS.again[key]=false;}
+  }while(TS.again[key]);
+  delete TS.want[key];TS.busy[key]=false;trkRefresh();
 }
 
 const PG=()=>SITE().pages[ST.page];
@@ -235,7 +243,7 @@ function drawHeader(){
   $('#onlyChg').classList.toggle('on',ST.only);
   $('#fullBtn').classList.toggle('on',!ST.full);$('#fullBtn').textContent=ST.full?'Đang xem đầy đủ (bấm để rút gọn)':'Đang rút gọn mục lặp (bấm xem đầy đủ)';
 }
-$('#siteSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.site=b.dataset.s;BACKS.length=0;drawBack();ST.page=ST.page==='__trk'?'__trk':'__ov';ST.block=0;ST.note=null;ST.rowSel=null;save();renderAll();};
+$('#siteSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.site=b.dataset.s;BACKS.length=0;drawBack();ST.page='__trk';ST.block=0;ST.note=null;ST.rowSel=null;save();renderAll();};
 $('#modeSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;ST.mode=b.dataset.m;save();renderAll();};
 $('#viewSeg').onclick=e=>{const b=e.target.closest('button');if(!b||b.dataset.v===ST.view)return;const idx=topRowIndex();ST.view=b.dataset.v;save();renderAll();scrollToRowIndex(idx);};
 $('#fullBtn').onclick=()=>{ST.full=!ST.full;renderAll();};
@@ -246,7 +254,7 @@ $('#colAll').onclick=()=>{collapsed[ckey()]=null;renderView();};
 /* ---------- nav trái ---------- */
 function pageCount(p){return p.changes}
 function drawNav(){
-  const S=SITE();let h=`<a data-p="__trk" class="${ST.page==='__trk'?'on':''}"><span>Theo dõi sửa lỗi (IT báo sửa)</span><span class="badge ${trkFixedCount()?'':'z'}" id="trkBadge">${trkFixedCount()}/${TRK.length}</span></a><a data-p="__ov" class="${ST.page==='__ov'?'on':''}"><span>Tổng quan (loại trang x loại schema)</span></a>`;
+  const S=SITE();let h=`<a data-p="__trk" class="${ST.page==='__trk'?'on':''}"><span>Bảng theo dõi sửa lỗi (IT báo sửa)</span><span class="badge ${trkFixedCount()?'':'z'}" id="trkBadge">${trkFixedCount()}/${TRK.length}</span></a>`;
   let g='';
   Object.keys(S.pages).forEach(k=>{
     const p=S.pages[k];
@@ -260,9 +268,7 @@ $('#pageNav').onclick=e=>{const a=e.target.closest('a');if(!a)return;ST.page=a.d
 function drawNotes(){
   const el=$('#noteList'),cf=$('#catFilter');
   if(ST.page==='__trk'){$('#listH').textContent='Theo dõi sửa lỗi';cf.innerHTML='';
-    el.innerHTML='<div class="empty">Bảng này tính chung cho cả TGDĐ và ĐMX: IT tick một lần là sửa cho mọi site có lỗi đó. Muốn xem chi tiết từng lỗi, chọn một loại trang ở trên rồi bấm mã lỗi.</div>';return;}
-  if(ST.page==='__ov'){$('#listH').textContent='Nhóm lỗi';cf.innerHTML='';
-    el.innerHTML='<div class="empty">Chọn một loại trang để xem từng chỗ cần sửa, hoặc bấm vào ô số trong bảng tổng quan.</div>';return;}
+    el.innerHTML='<div class="empty">Một bảng duy nhất cho cả TGDĐ và ĐMX: IT tick một lần là sửa cho mọi site có lỗi đó. Muốn xem chi tiết một lỗi, bấm tên loại trang ngay trong cột TGDĐ hoặc ĐMX của dòng đó.</div>';return;}
   $('#listH').textContent='Chỗ cần sửa trên trang này';
   cf.innerHTML=CATS.map(c=>`<span class="chip ${c} ${ST.catOff[c]?'off':''}" data-c="${c}" title="${esc(CATL[c])}">${esc(CATL[c])}</span>`).join('');
   const P=PG();const ids=Object.keys(P.notes).filter(n=>!ST.catOff[NOTES[n].cat]);
@@ -278,7 +284,6 @@ const curBlock=()=>{const P=PG();return P?P.blocks[ST.block]:null;};
 const ckey=()=>ST.site+'|'+ST.page+'|'+ST.block;
 function drawCenter(){
   if(ST.page==='__trk'){drawTracker();return;}
-  if(ST.page==='__ov'){drawOverview();return;}
   const P=PG();
   const tabs=P.blocks.map((b,i)=>`<button class="tab ${i===ST.block?'on':''}" data-b="${i}">${esc(b.type)}${b.changes?`<i>${b.changes}</i>`:''}${b.side==='old'?'<span class="sd bo">BỎ</span>':b.side==='new'?'<span class="sd them">THÊM</span>':''}</button>`).join('');
   const cb=P.blocks[ST.block];
@@ -633,7 +638,7 @@ function step(d){
 const bl=s=>{const L=String(s).split('\n').map(x=>x.trim()).filter(Boolean);return L.length>1?'<ul class="bl">'+L.map(x=>'<li>'+esc(x.replace(/^[-•]\s*/,''))+'</li>').join('')+'</ul>':esc(L[0]||'');};
 function drawDetail(){
   const el=$('#detail');
-  if(ST.page==='__ov'||ST.page==='__trk'||!ST.note){
+  if(ST.page==='__trk'||!ST.note){
     el.innerHTML=`<div class="empty">Bấm vào dòng được tô màu, nhãn mã lỗi (ví dụ <span class="chip LOI">A1</span>) hoặc một mục ở cột trái để xem: lỗi hiện tại ra sao, vì sao phải sửa, sửa thành gì, nằm ở tab và đường dẫn nào trong schema.<br><br>Dòng đang chọn sẽ <b>tô đậm</b> để dễ tìm. Dùng nút ◀ Trước / Sau ▶ để đi lần lượt qua từng chỗ cần sửa.</div>`;return;}
   const o=NOTES[ST.note];const P=PG();
   let oldv='',newv='',pathTxt='';
@@ -667,10 +672,21 @@ function drawDetail(){
 
 /* ---------- bảng theo dõi sửa lỗi ---------- */
 const qcCell=q=>`<span class="qb ${q.st}">${esc(q.label)}</span><span class="qd">đo ${esc(q.date)}</span><ul>${q.lines.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>${q.link?`<a href="${esc(q.link.href)}" target="_blank" rel="noopener">${esc(q.link.label)} ↗</a>`:''}`;
+function trkWhere(t,s){ // số chỗ cần sửa và các loại trang có lỗi này ở site s
+  const P=DATA.sites[s].pages;let tot=0;const links=[];
+  Object.keys(P).forEach(p=>{const c=P[p].notes[t.note];if(c){tot+=c;links.push(`<a href="#" data-s="${s}" data-p="${p}" data-n="${esc(t.note)}">${esc(P[p].label)}</a>`);}});
+  return {tot,links};
+}
 function trkSiteCell(t,s){
   if(!t.sites.includes(s))return '<span class="mut" title="Site này không có lỗi này">–</span>';
-  const q=qcOf(t,s);
-  return `<b>Có lỗi</b><br><span class="qb ${q?q.st:'none'}" title="SEO đo lại riêng từng site">${q?'SEO: '+esc(q.label):'SEO: chưa đo'}</span>`;
+  const q=qcOf(t,s),w=trkWhere(t,s);
+  return `<b>Có lỗi</b>${w.tot?` <span class="cnt">${w.tot} chỗ</span>`:''}<br><span class="qb ${q?q.st:'none'}" title="SEO đo lại riêng từng site">${q?'SEO: '+esc(q.label):'SEO: chưa đo'}</span>`+
+    (w.links.length?`<div class="pgs">${w.links.join(', ')}</div>`:'<div class="pgs mut">Không có trong trang mẫu đo</div>');
+}
+function trkGo(site,page,note){ // mở đúng loại trang, đúng lỗi; có nút quay lại bảng
+  BACKS.push({site:ST.site,page:ST.page,block:ST.block,note:ST.note,rowSel:ST.rowSel,mode:ST.mode,top:0,y:window.scrollY,label:where()});
+  ST.site=site;ST.page=page;ST.block=0;ST.note=null;ST.rowSel=null;ST.mode=ST.mode==='old'?'both':ST.mode;
+  renderAll();selectNote(note,true);drawBack();window.scrollTo(0,0);
 }
 function trkQcCell(t){
   return t.sites.map(s=>{const q=qcOf(t,s);return `<div class="qsite"><b>${esc(siteLbl(s))}</b> ${q?qcCell(q):'<span class="qd">SEO chưa nghiệm thu</span>'}</div>`;}).join('');
@@ -720,20 +736,21 @@ function trkRefresh(){ // cập nhật tại chỗ, không đụng ô đang gõ
 }
 function drawTracker(){
   let h=`<div class="trk"><h3>Theo dõi sửa lỗi Schema</h3><p class="sub" style="margin:0">Mỗi dòng một mã lỗi, tính chung TGDĐ và ĐMX. IT tick "đã sửa" một lần là sửa cho mọi site có lỗi đó. "SEO" ở cột site là kết quả SEO đo lại riêng từng site, có thể chưa đạt dù IT đã báo sửa. <span id="trkSum"></span></p>
+  <p class="sub" style="margin:4px 0 0"><b>Mã</b>: đỏ = lỗi giá trị đang chạy, xanh dương = đổi theo schema mới. <b>Nhóm theo nhân sự IT</b>: anh Nhựt sửa lỗi giá trị đang chạy; chị Nguyệt nhận phần đổi theo schema mới và các mục cần sửa lại mô tả BA (X2, X6, M19). <b>Tên loại trang</b> trong cột TGDĐ, ĐMX: bấm để xem đúng chỗ cần sửa.</p>
   <div class="trkbar" id="trkBar"></div>
   <table class="mx trkt"><tr><th>Mã lỗi</th><th class="l">Tên lỗi</th><th>TGDĐ</th><th>ĐMX</th><th class="l">Note nghiệm thu của SEO</th><th>IT đã sửa</th><th class="l">Note của IT</th></tr>`;
   let grp=null;
   TRK.forEach(t=>{const o=NOTES[t.note];
     if(t.it!==grp){grp=t.it;h+=`<tr class="itg"><td colspan="7" class="l">${itTag({it:t.it})} <b data-cnt="${t.it}"></b></td></tr>`;}
     const r=trkRow(t.key);
-    h+=`<tr data-trk="${esc(t.key)}"><td><span class="code ${t.cat}" title="${esc(CATL[t.cat])}">${esc(t.key)}</span></td><td class="l">${esc(t.title)}</td>`+
+    h+=`<tr data-trk="${esc(t.key)}"><td><span class="code ${t.cat}" title="${esc(CATL[t.cat])}">${esc(t.key)}</span><div class="mut cat">${esc(CATL[t.cat])}</div></td><td class="l">${esc(t.title)}</td>`+
     SITE_ORDER.map(s=>`<td class="sitecell">${trkSiteCell(t,s)}</td>`).join('')+
     `<td class="qc">${trkQcCell(t)}</td>
     <td><label class="fx"><input type="checkbox" data-fx="${esc(t.key)}" ${r.fixed?'checked':''}>IT báo đã sửa</label><span data-wn="${esc(t.key)}">${trkWarn(t)}</span></td>
     <td><textarea data-nt="${esc(t.key)}" maxlength="500" placeholder="Ghi chú cho SEO (tối đa 500 ký tự)">${esc(r.note)}</textarea><span data-st="${esc(t.key)}">${trkStatusHtml(t.key)}</span></td></tr>`;});
   h+=`</table><div class="trkfoot" id="trkFoot"></div></div>`;
   $('#center').innerHTML=h;
-  $('#center').onclick=null;
+  $('#center').onclick=e=>{const a=e.target.closest('a[data-p][data-s]');if(a){e.preventDefault();trkGo(a.dataset.s,a.dataset.p,a.dataset.n);}};
   $('#center').onchange=e=>{
     const cb=e.target.closest('input[data-fx]');if(cb){trkSave(cb.dataset.fx,{fixed:cb.checked});return;}
     const ta=e.target.closest('textarea[data-nt]');if(ta){trkSave(ta.dataset.nt,{note:ta.value});}
@@ -741,42 +758,6 @@ function drawTracker(){
   $('#center').oninput=e=>{const ta=e.target.closest('textarea[data-nt]');if(ta)TS.dirty[ta.dataset.nt]=true;};
   trkCounts();trkDrawBar();trkLock();
 }
-/* ---------- tổng quan ---------- */
-function drawOverview(){
-  const S=SITE();const pages=Object.keys(S.pages);
-  const types=[];pages.forEach(p=>S.pages[p].blocks.forEach(b=>{if(!types.includes(b.type))types.push(b.type);}));
-  const ord=['Organization','WebSite','BreadcrumbList','CollectionPage','OfferCatalog','ProductGroup','Product'];types.sort((a,b)=>(ord.indexOf(a)<0?99:ord.indexOf(a))-(ord.indexOf(b)<0?99:ord.indexOf(b)));
-  let h=`<div class="ov"><h3 style="margin-top:0">${esc(S.label)}: số chỗ cần sửa theo loại trang và loại schema</h3>
-  <p class="sub">Bấm vào một ô để mở đúng loại trang, đúng khối schema. Ô xám = không có khối đó ở loại trang này hoặc không có thay đổi.</p>
-  <table class="mx"><tr><th class="l">Loại schema</th>${pages.map(p=>`<th>${esc(S.pages[p].label)}</th>`).join('')}</tr>`;
-  types.forEach(t=>{h+=`<tr><td class="l"><b>${esc(t)}</b></td>`;pages.forEach(p=>{
-    const bi=S.pages[p].blocks.findIndex(b=>b.type===t);
-    if(bi<0){h+='<td class="cell z">·</td>';return;}
-    const c=S.pages[p].blocks[bi].changes;
-    h+=c?`<td class="cell" data-p="${p}" data-b="${bi}"><span class="badge">${c}</span></td>`:'<td class="cell z" title="Có khối, không đổi">0</td>';});h+='</tr>';});
-  h+=`<tr><td class="l"><b>Tổng</b></td>${pages.map(p=>`<td><b>${S.pages[p].changes}</b></td>`).join('')}</tr></table>`;
-  // bảng ghi chú
-  const all={};pages.forEach(p=>Object.keys(S.pages[p].notes).forEach(n=>{(all[n]=all[n]||{tot:0,pg:[]});all[n].tot+=S.pages[p].notes[n];all[n].pg.push(p);}));
-  const ids=Object.keys(all).sort((a,b)=>itRank(a)-itRank(b)||CATS.indexOf(NOTES[a].cat)-CATS.indexOf(NOTES[b].cat)||all[b].tot-all[a].tot);
-  const QC=S.qc||null;
-  h+=`<h3>Tất cả nhóm thay đổi của ${esc(S.label)}</h3><table class="mx"><tr><th>Mã</th><th class="l">Nội dung</th><th>Nhóm</th><th>Nhân sự IT</th><th>Số chỗ</th><th class="l">Loại trang</th>${QC?'<th class="l">Note nghiệm thu</th>':''}</tr>`;
-  let grp=null;const ncol=QC?7:6;
-  ids.forEach(n=>{const o=NOTES[n];const q=QC&&QC[n];
-    if(o.it!==grp){grp=o.it;const cnt=ids.filter(x=>NOTES[x].it===grp).length;h+=`<tr class="itg"><td colspan="${ncol}" class="l">${itTag(o)} <b>${cnt} mục</b></td></tr>`;}
-    h+=`<tr><td><span class="code ${o.cat}">${esc(o.code)}</span></td><td class="l">${esc(o.title)}</td><td>${esc(CATL[o.cat])}</td><td>${itTag(o)}</td><td>${all[n].tot}</td><td class="l">${all[n].pg.map(p=>`<a href="#" data-p="${p}" data-n="${n}">${esc(S.pages[p].label)}</a>`).join(', ')}</td>${QC?`<td class="qc">${q?qcCell(q):''}</td>`:''}</tr>`;});
-  h+='</table>';
-  // ghi chú không thấy trên mẫu
-  const seen=new Set(ids);const rel=Object.keys(NOTES).filter(n=>!seen.has(n)&&(n==='A14'||(NOTES[n].known||[]).includes(ST.site)));
-  if(rel.length){h+=`<h3>Đã biết nhưng không thấy trong trang mẫu đo hôm nay</h3><p class="sub">Các lỗi này có ở nhiều trang khác trên web nên IT vẫn cần kiểm khi áp schema mới, dù trang mẫu hôm nay không có.</p><table class="mx"><tr><th>Mã</th><th class="l">Nội dung và lý do</th></tr>`;
-    rel.forEach(n=>{const o=NOTES[n];h+=`<tr><td><span class="code ${o.cat}">${esc(o.code)}</span></td><td class="l"><b>${esc(o.title)}</b><br>${esc(o.why)}</td></tr>`;});h+='</table>';}
-  h+='<h3>Cách đọc</h3><ul class="sub" style="font-size:13px;line-height:1.7"><li><b>Loại trang</b>: 6 đến 8 loại, theo từng cột bên trái.</li><li><b>Loại schema</b>: mỗi trang có nhiều khối (Organization, WebSite, BreadcrumbList, CollectionPage, Product...). Chọn tab theo khối.</li><li><b>Mã</b>: màu đỏ = lỗi giá trị đang chạy, xanh dương = đổi theo schema mới. </li><li><b>Nhân sự IT</b>: anh Nhựt sửa lỗi giá trị đang chạy; chị Nguyệt nhận phần đổi theo schema mới và các mục cần sửa lại mô tả BA (X2, X6, M19).</li><li>Chọn một mã: các dòng liên quan <b>tô đậm</b> ở cả hai cột, cột phải giải thích lỗi hiện tại và cách sửa.</li></ul></div>';
-  $('#center').innerHTML=h;$('#center').onchange=null;$('#center').oninput=null;
-  $('#center').onclick=e=>{
-    const td=e.target.closest('td.cell[data-p]');if(td){ST.page=td.dataset.p;ST.block=+td.dataset.b;ST.note=null;ST.rowSel=null;renderAll();return;}
-    const a=e.target.closest('a[data-p]');if(a){e.preventDefault();ST.page=a.dataset.p;ST.block=0;renderAll();selectNote(a.dataset.n,true);}
-  };
-}
-
 function renderAll(){document.querySelector('main').classList.toggle('trk',ST.page==='__trk');drawHeader();drawNav();drawNotes();drawCenter();drawDetail();}
 renderAll();
 trkLoad();setInterval(()=>{if(!document.hidden)trkLoad();},60000);document.addEventListener('visibilitychange',()=>{if(!document.hidden)trkLoad();});
@@ -784,7 +765,7 @@ trkLoad();setInterval(()=>{if(!document.hidden)trkLoad();},60000);document.addEv
 const BACKS=[]; // ngăn xếp các chỗ đã rời đi, quay lại được nhiều bước
 {const bb=document.createElement('div');bb.id='backBtn';bb.innerHTML='<button type="button" class="go"></button><span class="hint">hoặc bấm Alt + ←</span>';document.body.appendChild(bb);}
 function where(){ // tên chỗ đang xem: Loại trang › Tab › đường dẫn dòng đang chọn
-  if(ST.page==='__ov'||!PG())return 'Tổng quan';
+  if(ST.page==='__trk'||!PG())return 'Bảng theo dõi sửa lỗi';
   const b=curBlock();let s=PG().label+' › '+(b?b.type:'');
   if(ST.rowSel&&b&&b.rows[ST.rowSel.i]){const pth=(b.rows[ST.rowSel.i].p||'').replace(/\[\*\]/g,'[…]');if(pth)s+=' › '+pth;}
   return s;
@@ -795,14 +776,17 @@ function drawBack(){
 }
 function goBack(){
   const k=BACKS.pop();if(!k)return;
-  ST.page=k.page;ST.block=k.block;ST.note=k.note;ST.rowSel=k.rowSel;ST.mode=k.mode;renderAll();scrollToRowIndex(k.top);
+  if(k.site)ST.site=k.site;
+  ST.page=k.page;ST.block=k.block;ST.note=k.note;ST.rowSel=k.rowSel;ST.mode=k.mode;renderAll();
+  if(k.page==='__trk'){window.scrollTo(0,k.y||0);drawBack();return;}
+  scrollToRowIndex(k.top);
   if(ST.rowSel){revealRow(ST.rowSel.b,ST.rowSel.i);renderView();scrollToSel();}
   drawBack();
 }
 function jumpTo(page,blockType,path,fromIdx){
   if(!SITE().pages[page])return;
   const cb0=curBlock();if(fromIdx!=null&&cb0&&cb0.rows[fromIdx]){const ti=topOf(cb0,fromIdx);ST.rowSel={b:ST.block,i:ti};ST.note=cb0.rows[ti].n||ST.note;}
-  BACKS.push({page:ST.page,block:ST.block,note:ST.note,rowSel:ST.rowSel,mode:ST.mode,top:topRowIndex(),label:where()});
+  BACKS.push({site:ST.site,page:ST.page,block:ST.block,note:ST.note,rowSel:ST.rowSel,mode:ST.mode,top:topRowIndex(),label:where()});
   ST.page=page;const bi=SITE().pages[page].blocks.findIndex(b=>b.type===blockType);ST.block=bi<0?0:bi;
   if(ST.mode==='old')ST.mode='both';
   ST.note=null;ST.rowSel=null;renderAll();

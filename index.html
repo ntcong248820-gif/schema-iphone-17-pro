@@ -194,8 +194,8 @@ const SITE=()=>DATA.sites[ST.site];
 /* ---------- theo dõi sửa lỗi (IT báo sửa, lưu ở Google Sheet qua Apps Script) ---------- */
 const TRK=DATA.tracker||[],API=DATA.trackerApi||'';
 const TS={rows:Object.assign({},(DATA.trackerSnap&&DATA.trackerSnap.rows)||{}),src:'snap',at:(DATA.trackerSnap&&DATA.trackerSnap.at)||'',err:'',msg:{},dirty:{},busy:{},want:{},again:{}};
-let CRED={name:'',pw:''};
-try{const q=JSON.parse(localStorage.getItem('smvht_trk')||'{}');if(q.name)CRED.name=String(q.name);if(q.pw)CRED.pw=String(q.pw);}catch(e){}
+let CRED={name:''};
+try{const q=JSON.parse(localStorage.getItem('smvht_trk')||'{}');if(q.name)CRED.name=String(q.name);if('pw' in q)saveCred();}catch(e){} // bản cũ có lưu mật khẩu: ghi lại chỉ còn tên
 function saveCred(){try{localStorage.setItem('smvht_trk',JSON.stringify(CRED));}catch(e){}}
 const trkRow=k=>TS.rows[k]||{fixed:false,note:'',by:'',at:''};
 const trkFixedCount=()=>TRK.filter(t=>trkRow(t.key).fixed).length;
@@ -210,7 +210,7 @@ async function trkLoad(){
   trkRefresh();
 }
 async function trkSave(key,patch){
-  if(!API||!CRED.pw||!CRED.name){TS.msg[key]={t:'Nhập tên và mật khẩu ở thanh phía trên trước khi sửa.',c:'er'};trkRowStatus(key);return;}
+  if(!API||!CRED.name){TS.msg[key]={t:'Nhập tên của bạn ở thanh phía trên trước khi sửa.',c:'er'};trkRowStatus(key);return;}
   // trạng thái mong muốn của dòng = bản đang chờ (nếu có) gộp thêm thay đổi mới: tick rồi gõ note liền tay không làm mất tick
   const cur=TS.want[key]||trkRow(key);
   TS.want[key]=Object.assign({fixed:cur.fixed,note:cur.note},patch);
@@ -219,15 +219,14 @@ async function trkSave(key,patch){
   do{
     TS.again[key]=false;
     const w=TS.want[key];
-    const body={pw:CRED.pw,by:CRED.name,key,fixed:w.fixed,note:w.note};
+    const body={by:CRED.name,key,fixed:w.fixed,note:w.note};
     TS.msg[key]={t:'Đang lưu…',c:''};trkRowStatus(key);
     try{
       const r=await fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
       const j=await r.json();
       if(j.ok){TS.rows[key]=j.row;TS.msg[key]=null;if(!TS.again[key])delete TS.dirty[key];}
-      else{const m={wrong_password:'Mật khẩu chưa đúng, nhập lại ở thanh phía trên.',locked:'Nhập sai quá nhiều lần, thử lại sau 1 giờ.',unknown_key:'Mã này không có trong danh sách.',bad_name:'Tên không hợp lệ (1 đến 40 ký tự).',note_too_long:'Note dài quá 500 ký tự.',busy:'Hệ thống đang bận, bấm lại sau vài giây.'};
-        TS.msg[key]={t:m[j.error]||'Không lưu được, thử lại.',c:'er'};TS.again[key]=false;
-        if(j.error==='wrong_password'){CRED.pw='';saveCred();trkDrawBar();trkLock();}}
+      else{const m={locked:'Ghi quá nhiều lần trong 1 giờ, thử lại sau.',unknown_key:'Mã này không có trong danh sách.',bad_name:'Tên không hợp lệ (1 đến 40 ký tự).',note_too_long:'Note dài quá 500 ký tự.',busy:'Hệ thống đang bận, bấm lại sau vài giây.'};
+        TS.msg[key]={t:m[j.error]||'Không lưu được, thử lại.',c:'er'};TS.again[key]=false;}
     }catch(e){TS.msg[key]={t:'Không kết nối được Google Sheet, chưa lưu. Thử lại sau.',c:'er'};TS.again[key]=false;}
   }while(TS.again[key]);
   delete TS.want[key];TS.busy[key]=false;trkRefresh();
@@ -705,16 +704,16 @@ function trkRowStatus(k){
   const el=document.querySelector(`[data-st="${CSS.escape(k)}"]`);if(el)el.innerHTML=trkStatusHtml(k);
   const t=TRK.find(x=>x.key===k),w=document.querySelector(`[data-wn="${CSS.escape(k)}"]`);if(w&&t)w.innerHTML=trkWarn(t);
 }
-function trkCanEdit(){return !!(API&&CRED.pw&&CRED.name);}
+function trkCanEdit(){return !!(API&&CRED.name);}
 function trkLock(){document.querySelectorAll('.trkt input[type=checkbox],.trkt textarea').forEach(e=>{e.disabled=!trkCanEdit();});}
 function trkDrawBar(){
   const el=document.getElementById('trkBar');if(!el)return;
   if(!API){el.innerHTML='<span class="er">Chưa kết nối Google Sheet, trang chỉ xem được bản chụp.</span>';return;}
-  if(trkCanEdit()){el.innerHTML=`<span class="ok">Đang sửa với tên: ${esc(CRED.name)}</span><button class="btn" id="trkOut">Đổi tên, mật khẩu</button>`;
-    document.getElementById('trkOut').onclick=()=>{CRED.pw='';saveCred();trkDrawBar();trkLock();};return;}
-  el.innerHTML=`<span>Muốn tick hoặc ghi note: nhập tên và mật khẩu (xin owner hoặc IT).</span><input id="trkName" placeholder="Tên của bạn" maxlength="40" value="${esc(CRED.name)}"><input id="trkPw" type="password" placeholder="Mật khẩu" autocomplete="off"><button class="btn on" id="trkGo">Lưu để sửa</button>`;
-  document.getElementById('trkGo').onclick=()=>{const n=document.getElementById('trkName').value.trim(),p=document.getElementById('trkPw').value;
-    if(!n||!p){return;}CRED.name=n;CRED.pw=p;saveCred();trkDrawBar();trkLock();};
+  if(trkCanEdit()){el.innerHTML=`<span class="ok">Đang sửa với tên: ${esc(CRED.name)}</span><button class="btn" id="trkOut">Đổi tên</button>`;
+    document.getElementById('trkOut').onclick=()=>{CRED.name='';saveCred();trkDrawBar();trkLock();};return;}
+  el.innerHTML=`<span>Muốn tick hoặc ghi note: nhập tên của bạn (để SEO biết ai báo).</span><input id="trkName" placeholder="Tên của bạn" maxlength="40" value="${esc(CRED.name)}"><button class="btn on" id="trkGo">Lưu tên</button>`;
+  const go=()=>{const n=document.getElementById('trkName').value.trim();if(!n)return;CRED.name=n;saveCred();trkDrawBar();trkLock();};
+  document.getElementById('trkGo').onclick=go;document.getElementById('trkName').onkeydown=e=>{if(e.key==='Enter')go();};
 }
 function trkFootHtml(){
   const src=TS.src==='live'?`Cập nhật lần cuối từ Google Sheet: ${esc(TS.at)}`:(TS.at?`Bản chụp lúc dựng trang: ${esc(TS.at)}${TS.err==='fail'?'. Không tải được Google Sheet, đang hiện bản chụp.':''}`:'Chưa có dữ liệu.');

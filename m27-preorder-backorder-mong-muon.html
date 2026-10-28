@@ -1,0 +1,100 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M27: Minh họa lỗi PreOrder và BackOrder trên trang Đặt trước</title><style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:1040px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad);font-weight:600}td.ok{background:#eef7ee;color:var(--ok);font-weight:600}tr.bad td{background:#fdecea}tr.gap td{background:#fff4e5;color:#8a5a00}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{background:#0f172a;color:#e2e8f0;padding:10px 0;border-radius:8px;overflow:auto;margin:6px 0}
+.ln{display:block;white-space:pre-wrap;word-break:break-word;padding:0 10px}.ln.bad{background:#5b1f1f;color:#ffd6d6}.ln.ok{background:#17391d;color:#c8f0cf}
+.ln .note{color:#ffb4b4}.ln.ok .note{color:#a5e8b2}
+a{color:var(--sel);word-break:break-all}.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff;background:var(--bad);margin-right:6px}
+.badge.only{background:#ef6c00}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.u{margin:2px 0 6px;font-size:12.5px}
+.how{background:#eef3fd;border:1px solid #c9d8f6;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:12.5px}
+.cols>div{min-width:0}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+</style></head><body><div class="w"><p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p><h1>M27: Trang đặt trước nhận cọc nhưng Schema ra InStock, thiếu availabilityStarts</h1><p class="mut">Minh họa case thực tế vivo X500 Pro Max đang nhận đặt cọc nhưng Schema khai sai tình trạng bán hàng.</p>
+    <div class="card">
+      <span class="badge">Chưa đạt</span><span class="mut">Nghiệm thu trên Live Production (28/10/2026)</span>
+      <ul>
+        <li><b>Hiện trạng thực tế trên web:</b> Dòng sản phẩm vivo X500 Series (<a href="https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb" target="_blank" rel="noopener">TGDĐ Live ↗</a> và <a href="https://www.dienmayxanh.com/dien-thoai/vivo-x500-pro-max-12gb-512gb" target="_blank" rel="noopener">ĐMX Live ↗</a>) đang mở chương trình <b>Đặt trước</b>:
+          <ul>
+            <li>Giá dự kiến: <code>49.990.000₫</code></li>
+            <li>Chính sách đặt cọc: Nhận cọc 1.000.000₫ đến 5.000.000₫</li>
+            <li>Thời gian nhận máy dự kiến: <b>31/10/2026</b></li>
+          </ul>
+        </li>
+        <li><b>Bản chất trạng thái:</b> Đây là case <b>PreOrder</b> (sản phẩm mới chưa ra mắt chính thức, đang mở đặt cọc trước ngày mở bán).</li>
+        <li><b>Lỗi Schema trên Live:</b> Hệ thống đang xuất template cũ:
+          <ul>
+            <li>Khai <code>availability: https://schema.org/InStock</code> (sai hoàn toàn với thực tế đang nhận đặt cọc trước mở bán).</li>
+            <li>Khai <code>@type: Product</code> đơn lẻ, thiếu <code>ProductGroup</code> và các biến thể <code>hasVariant</code>.</li>
+            <li>Thiếu hoàn toàn trường ngày giao hàng dự kiến <code>availabilityStarts</code>.</li>
+          </ul>
+        </li>
+        <li><b>Tiêu chí ĐẠT:</b> Chuyển schema sang <code>ProductGroup</code>, các biến thể khai đúng <code>https://schema.org/PreOrder</code> (hoặc <code>BackOrder</code> nếu là hàng đặt đợt sau) kèm <code>availabilityStarts: 2026-10-31</code>.</li>
+      </ul>
+    </div>
+
+    <h2>So sánh trực quan: Schema Hiện tại vs Mong muốn</h2>
+    <div class="cols">
+      <div>
+        <b style="color:#c62828">Schema đang ra trên Live (Hiện tại)</b>
+        <pre><span class="ln">{</span><span class="ln">  &quot;@context&quot;: &quot;https://schema.org&quot;,</span><span class="ln bad">  &quot;@type&quot;: &quot;Product&quot;,<span class="note">   ← Khai Product đơn lẻ, thiếu ProductGroup và cấu trúc biến thể hasVariant</span></span><span class="ln">  &quot;name&quot;: &quot;Điện thoại vivo X500 Pro Max 12GB/512GB&quot;,</span><span class="ln">  &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb&quot;,</span><span class="ln">  &quot;offers&quot;: {</span><span class="ln">    &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">    &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">    &quot;price&quot;: 49990000.0,</span><span class="ln bad">    &quot;availability&quot;: &quot;https://schema.org/InStock&quot;,<span class="note">   ← Trang đặt cọc mở bán nhưng Schema lại khai InStock</span></span><span class="ln">    &quot;itemCondition&quot;: &quot;https://schema.org/NewCondition&quot;</span><span class="ln">  }</span><span class="ln">}</span></pre>
+      </div>
+      <div>
+        <b style="color:#2e7d32">Mong muốn chuẩn theo Rule M27</b>
+        <pre><span class="ln">{</span><span class="ln">  &quot;@context&quot;: &quot;https://schema.org&quot;,</span><span class="ln ok">  &quot;@type&quot;: &quot;ProductGroup&quot;,<span class="note">   ← Khai cấp nhóm ProductGroup chuẩn SEO</span></span><span class="ln">  &quot;name&quot;: &quot;Điện thoại vivo X500 Pro Max&quot;,</span><span class="ln">  &quot;productGroupID&quot;: &quot;vivo-x500-pro-max&quot;,</span><span class="ln">  &quot;variesBy&quot;: [</span><span class="ln">    &quot;https://schema.org/color&quot;</span><span class="ln">  ],</span><span class="ln">  &quot;hasVariant&quot;: [</span><span class="ln">    {</span><span class="ln">      &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">      &quot;name&quot;: &quot;vivo X500 Pro Max 12GB/512GB Titan Tự Nhiên&quot;,</span><span class="ln">      &quot;sku&quot;: &quot;371194&quot;,</span><span class="ln">      &quot;color&quot;: &quot;Titan Tự Nhiên&quot;,</span><span class="ln">      &quot;offers&quot;: {</span><span class="ln">        &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">        &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb?code=371194&quot;,</span><span class="ln">        &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">        &quot;price&quot;: 49990000.0,</span><span class="ln ok">        &quot;availability&quot;: &quot;https://schema.org/PreOrder&quot;,<span class="note">   ← Đúng tình trạng đặt trước có cọc (PreOrder)</span></span><span class="ln ok">        &quot;availabilityStarts&quot;: &quot;2026-10-31&quot;<span class="note">   ← Khớp ngày dự kiến nhận máy hiển thị trên trang</span></span><span class="ln">      }</span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">      &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">      &quot;name&quot;: &quot;vivo X500 Pro Max 12GB/512GB Đen Vũ Trụ&quot;,</span><span class="ln">      &quot;sku&quot;: &quot;371195&quot;,</span><span class="ln">      &quot;color&quot;: &quot;Đen Vũ Trụ&quot;,</span><span class="ln">      &quot;offers&quot;: {</span><span class="ln">        &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">        &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb?code=371195&quot;,</span><span class="ln">        &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">        &quot;price&quot;: 49990000.0,</span><span class="ln ok">        &quot;availability&quot;: &quot;https://schema.org/PreOrder&quot;,<span class="note">   ← Đúng tình trạng đặt trước có cọc (PreOrder)</span></span><span class="ln ok">        &quot;availabilityStarts&quot;: &quot;2026-10-31&quot;<span class="note">   ← Khớp ngày dự kiến nhận máy hiển thị trên trang</span></span><span class="ln">      }</span><span class="ln">    }</span><span class="ln">  ]</span><span class="ln">}</span></pre>
+      </div>
+    </div>
+
+    <h2>Bảng tổng hợp quy tắc availability (Rule M27)</h2>
+    <div class="card">
+      <table>
+        <tr>
+          <th>Trạng thái thực tế trên web</th>
+          <th>availability chuẩn Schema.org</th>
+          <th>Trường availabilityStarts</th>
+        </tr>
+        <tr>
+          <td>Đang có hàng bán (nút Thêm vào giỏ / Mua ngay)</td>
+          <td><code>https://schema.org/InStock</code></td>
+          <td>Không khai</td>
+        </tr>
+        <tr style="background:#eef7ee">
+          <td><b>Sản phẩm mới chưa phát hành, nhận đặt cọc trước (vd: vivo X500)</b></td>
+          <td><b style="color:#2e7d32"><code>https://schema.org/PreOrder</code></b></td>
+          <td><b>Bắt buộc: Ngày dự kiến mở bán / giao hàng</b></td>
+        </tr>
+        <tr style="background:#fff4e5">
+          <td><b>Tạm hết hàng đợt đầu, nhận đặt cọc giao đợt sau (Hết suất đợt 1)</b></td>
+          <td><b style="color:#8a5a00"><code>https://schema.org/BackOrder</code></b></td>
+          <td><b>Bắt buộc: Ngày dự kiến có hàng đợt sau</b></td>
+        </tr>
+        <tr>
+          <td>Tạm hết / ngừng kinh doanh, không nhận đặt</td>
+          <td><code>https://schema.org/OutOfStock</code></td>
+          <td>Không khai</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>URL kiểm chứng thực tế</h2>
+    <div class="card">
+      <table>
+        <tr><th>Site</th><th>URL</th><th>Thực tế web</th><th>Schema hiện tại trên Live</th></tr>
+        <tr>
+          <td>TGDĐ</td>
+          <td><a href="https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb" target="_blank" rel="noopener">https://www.thegioididong.com/dtdd/vivo-x500-pro-max-12gb-512gb ↗</a></td>
+          <td>Đặt trước có cọc (giao 31/10)</td>
+          <td class="bad">Product + InStock (Sai)</td>
+        </tr>
+        <tr>
+          <td>ĐMX</td>
+          <td><a href="https://www.dienmayxanh.com/dien-thoai/vivo-x500-pro-max-12gb-512gb" target="_blank" rel="noopener">https://www.dienmayxanh.com/dien-thoai/vivo-x500-pro-max-12gb-512gb ↗</a></td>
+          <td>Đặt trước có cọc (giao 31/10)</td>
+          <td class="bad">Product + InStock (Sai)</td>
+        </tr>
+      </table>
+    </div>
+    </div></body></html>

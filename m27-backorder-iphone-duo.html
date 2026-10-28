@@ -1,0 +1,88 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>M27: Minh họa lỗi Back Order trên iPhone Duo</title><style>
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#1d2330;--mut:#667085;--line:#e3e6ec;--bad:#c62828;--ok:#2e7d32;--sel:#1a73e8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+.w{max-width:1040px;margin:0 auto;padding:18px 16px 60px}h1{font-size:20px;margin:6px 0 4px}h2{font-size:15px;margin:26px 0 8px}h3{font-size:14px;margin:0 0 2px}
+.mut{color:var(--mut)}.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:13px;margin:8px 0}th,td{border:1px solid var(--line);padding:6px 8px;text-align:left;vertical-align:top}th{background:#fafbfc;font-weight:600}
+td.bad{background:#fdecea;color:var(--bad);font-weight:600}td.ok{background:#eef7ee;color:var(--ok);font-weight:600}tr.bad td{background:#fdecea}tr.gap td{background:#fff4e5;color:#8a5a00}
+code,pre{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}pre{background:#0f172a;color:#e2e8f0;padding:10px 0;border-radius:8px;overflow:auto;margin:6px 0}
+.ln{display:block;white-space:pre-wrap;word-break:break-word;padding:0 10px}.ln.bad{background:#5b1f1f;color:#ffd6d6}.ln.ok{background:#17391d;color:#c8f0cf}
+.ln .note{color:#ffb4b4}.ln.ok .note{color:#a5e8b2}
+a{color:var(--sel);word-break:break-all}.badge{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:10px;color:#fff;background:var(--bad);margin-right:6px}
+.badge.only{background:#ef6c00}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}.u{margin:2px 0 6px;font-size:12.5px}
+.how{background:#eef3fd;border:1px solid #c9d8f6;border-radius:8px;padding:6px 10px;margin:6px 0;font-size:12.5px}
+.cols>div{min-width:0}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+</style></head><body><div class="w"><p class="mut" style="margin:0"><a href="./">← Quay lại bảng viewer</a></p><h1>M27: iPhone Duo hiện đang là Back Order (&quot;Hết suất&quot;) nhưng Schema ra InStock</h1><p class="mut">Trang đặt hàng iPhone Duo chạy pod riêng BE-ip18 chưa cập nhật template Schema mới, dẫn tới khai sai tình trạng bán hàng.</p>
+    <div class="card">
+      <span class="badge">Chưa đạt</span><span class="mut">Nghiệm thu trên Live Production (28/10/2026)</span>
+      <ul>
+        <li><b>Hiện trạng trên web:</b> Trang iPhone Duo (<a href="https://www.thegioididong.com/dtdd/iphone-duo" target="_blank" rel="noopener">TGDĐ Live ↗</a> và <a href="https://www.dienmayxanh.com/dien-thoai/iphone-duo" target="_blank" rel="noopener">ĐMX Live ↗</a>) các nút phiên bản (Star White, Night Sky từ 256GB đến 2TB) đều đang để nhãn <b>"Hết suất"</b> (đã hết suất cọc đợt 1 từ ngày 16/10, nhận đặt tiếp đợt sau).</li>
+        <li><b>Bản chất trạng thái:</b> Đây chính là trạng thái <b>Back Order</b> (sản phẩm đã mở bán nhưng tạm hết hàng, nhận đặt giao đợt tiếp theo).</li>
+        <li><b>Lỗi Schema trên Live:</b> Pod riêng <code>BE-ip18</code> vẫn đang xuất template cũ: ra <code>@type: Product</code> đơn lẻ và khai <code>availability: InStock</code> (sai lệch hoàn toàn với giao diện "Hết suất" thực tế), đồng thời thiếu <code>availabilityStarts</code>.</li>
+        <li><b>Tiêu chí ĐẠT:</b> Chuyển schema sang <code>ProductGroup</code>, các biến thể màu khai đúng <code>https://schema.org/BackOrder</code> kèm <code>availabilityStarts</code> khớp ngày giao đợt sau hiển thị trên trang.</li>
+      </ul>
+    </div>
+
+    <h2>So sánh trực quan: Schema Hiện tại vs Mong muốn</h2>
+    <div class="cols">
+      <div>
+        <b style="color:#c62828">Schema đang ra trên Live (pod BE-ip18)</b>
+        <pre><span class="ln">{</span><span class="ln">  &quot;@context&quot;: &quot;https://schema.org&quot;,</span><span class="ln bad">  &quot;@type&quot;: &quot;Product&quot;,<span class="note">   ← Ra Product đơn lẻ, thiếu ProductGroup và biến thể hasVariant</span></span><span class="ln">  &quot;name&quot;: &quot;iPhone Duo&quot;,</span><span class="ln">  &quot;offers&quot;: {</span><span class="ln">    &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">    &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/iphone-duo&quot;,</span><span class="ln bad">    &quot;availability&quot;: &quot;https://schema.org/InStock&quot;,<span class="note">   ← Giao diện web báo &quot;Hết suất&quot; nhưng Schema lại khai InStock</span></span><span class="ln">    &quot;itemCondition&quot;: &quot;https://schema.org/NewCondition&quot;,</span><span class="ln">    &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">    &quot;price&quot;: &quot;64990000&quot;</span><span class="ln">  }</span><span class="ln">}</span></pre>
+      </div>
+      <div>
+        <b style="color:#2e7d32">Mong muốn chuẩn theo Rule M27</b>
+        <pre><span class="ln">{</span><span class="ln">  &quot;@context&quot;: &quot;https://schema.org&quot;,</span><span class="ln ok">  &quot;@type&quot;: &quot;ProductGroup&quot;,<span class="note">   ← Khai cấp nhóm ProductGroup có variesBy và hasVariant</span></span><span class="ln">  &quot;name&quot;: &quot;iPhone Duo&quot;,</span><span class="ln">  &quot;productGroupID&quot;: &quot;iphone-duo&quot;,</span><span class="ln">  &quot;variesBy&quot;: [</span><span class="ln">    &quot;https://schema.org/color&quot;</span><span class="ln">  ],</span><span class="ln">  &quot;hasVariant&quot;: [</span><span class="ln">    {</span><span class="ln">      &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">      &quot;name&quot;: &quot;iPhone Duo 256GB Star White&quot;,</span><span class="ln">      &quot;sku&quot;: &quot;0131491005273&quot;,</span><span class="ln">      &quot;color&quot;: &quot;Star White&quot;,</span><span class="ln">      &quot;offers&quot;: {</span><span class="ln">        &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">        &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/iphone-duo?code=0131491005273&quot;,</span><span class="ln">        &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">        &quot;price&quot;: &quot;64990000&quot;,</span><span class="ln ok">        &quot;availability&quot;: &quot;https://schema.org/BackOrder&quot;,<span class="note">   ← Đúng tình trạng &quot;Hết suất&quot; đợt 1, nhận đặt đợt sau (BackOrder)</span></span><span class="ln ok">        &quot;availabilityStarts&quot;: &quot;2026-11-16&quot;<span class="note">   ← Ngày dự kiến giao hàng đợt kế tiếp</span></span><span class="ln">      }</span><span class="ln">    },</span><span class="ln">    {</span><span class="ln">      &quot;@type&quot;: &quot;Product&quot;,</span><span class="ln">      &quot;name&quot;: &quot;iPhone Duo 256GB Night Sky&quot;,</span><span class="ln">      &quot;sku&quot;: &quot;0131491005274&quot;,</span><span class="ln">      &quot;color&quot;: &quot;Night Sky&quot;,</span><span class="ln">      &quot;offers&quot;: {</span><span class="ln">        &quot;@type&quot;: &quot;Offer&quot;,</span><span class="ln">        &quot;url&quot;: &quot;https://www.thegioididong.com/dtdd/iphone-duo?code=0131491005274&quot;,</span><span class="ln">        &quot;priceCurrency&quot;: &quot;VND&quot;,</span><span class="ln">        &quot;price&quot;: &quot;64990000&quot;,</span><span class="ln ok">        &quot;availability&quot;: &quot;https://schema.org/BackOrder&quot;,<span class="note">   ← Đúng tình trạng &quot;Hết suất&quot; đợt 1, nhận đặt đợt sau (BackOrder)</span></span><span class="ln ok">        &quot;availabilityStarts&quot;: &quot;2026-11-16&quot;<span class="note">   ← Ngày dự kiến giao hàng đợt kế tiếp</span></span><span class="ln">      }</span><span class="ln">    }</span><span class="ln">  ]</span><span class="ln">}</span></pre>
+      </div>
+    </div>
+
+    <h2>Bảng tổng hợp quy tắc availability (Rule M27)</h2>
+    <div class="card">
+      <table>
+        <tr>
+          <th>Trạng thái thực tế trên web</th>
+          <th>availability chuẩn Schema.org</th>
+          <th>Trường availabilityStarts</th>
+        </tr>
+        <tr>
+          <td>Đang có hàng bán (nút Thêm vào giỏ / Mua ngay)</td>
+          <td><code>https://schema.org/InStock</code></td>
+          <td>Không khai</td>
+        </tr>
+        <tr>
+          <td>Sản phẩm mới chưa ra mắt, nhận đặt trước</td>
+          <td><code>https://schema.org/PreOrder</code></td>
+          <td>Bắt buộc (ngày mở bán dự kiến)</td>
+        </tr>
+        <tr style="background:#fff4e5">
+          <td><b>Tạm hết hàng đợt đầu, nhận đặt giao đợt sau ("Hết suất", vd iPhone Duo)</b></td>
+          <td><b style="color:#c62828"><code>https://schema.org/BackOrder</code></b></td>
+          <td><b>Bắt buộc: ngày dự kiến giao đợt sau</b></td>
+        </tr>
+        <tr>
+          <td>Tạm hết / ngừng kinh doanh, không nhận đặt</td>
+          <td><code>https://schema.org/OutOfStock</code></td>
+          <td>Không khai</td>
+        </tr>
+      </table>
+    </div>
+
+    <h2>URL kiểm chứng thực tế</h2>
+    <div class="card">
+      <table>
+        <tr><th>Site</th><th>URL</th><th>Giao diện thực tế</th><th>Schema hiện tại</th></tr>
+        <tr>
+          <td>TGDĐ</td>
+          <td><a href="https://www.thegioididong.com/dtdd/iphone-duo" target="_blank" rel="noopener">https://www.thegioididong.com/dtdd/iphone-duo ↗</a></td>
+          <td>Hết suất (tất cả màu)</td>
+          <td class="bad">Product + InStock (Sai)</td>
+        </tr>
+        <tr>
+          <td>ĐMX</td>
+          <td><a href="https://www.dienmayxanh.com/dien-thoai/iphone-duo" target="_blank" rel="noopener">https://www.dienmayxanh.com/dien-thoai/iphone-duo ↗</a></td>
+          <td>Hết suất (tất cả màu)</td>
+          <td class="bad">Product + InStock (Sai)</td>
+        </tr>
+      </table>
+    </div>
+    </div></body></html>
